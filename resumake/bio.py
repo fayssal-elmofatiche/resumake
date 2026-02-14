@@ -178,9 +178,7 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
     if bio_data.get("photo") and not photo_path:
         from .console import err_console
 
-        err_console.print(
-            f"[yellow]Warning:[/] Photo '{bio_data['photo']}' not found — skipping."
-        )
+        err_console.print(f"[yellow]Warning:[/] Photo '{bio_data['photo']}' not found — skipping.")
     if photo_path and photo_path.exists():
         p_photo = left_cell.paragraphs[0]
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
