@@ -23,7 +23,7 @@ The following commands send your CV data to an external LLM API (currently Anthr
 
 ## How to Stay Offline
 
-- Install without the `[ai]` extra: `pip install resumake`
+- Install without AI extras: `uv tool install resumake`
 - Do not set the `ANTHROPIC_API_KEY` environment variable
 - Use `--lang en` to skip translation
 - Translation results are cached locally in `output/.cv_de_cache.yaml` — subsequent builds reuse the cache without API calls

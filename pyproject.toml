@@ -42,6 +42,7 @@ dev = ["pytest>=8.0", "ruff>=0.8.0"]
 Homepage = "https://github.com/fayssal-elmofatiche/resumake"
 Repository = "https://github.com/fayssal-elmofatiche/resumake"
 Issues = "https://github.com/fayssal-elmofatiche/resumake/issues"
+Changelog = "https://github.com/fayssal-elmofatiche/resumake/blob/main/CHANGELOG.md"
 
 [project.scripts]
 resumake = "resumake:app"

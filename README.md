@@ -1,20 +1,12 @@
 # resumake
 
+[![CI](https://github.com/fayssal-elmofatiche/resumake/actions/workflows/ci.yml/badge.svg)](https://github.com/fayssal-elmofatiche/resumake/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Build styled CV documents from a single YAML source.
 
-`resumake` turns a `cv.yaml` file into polished Word (.docx) documents with a two-column layout, photo, icons, and consistent theming. Optionally translate to German, tailor for specific jobs, or generate a condensed one-pager bio — all from the command line.
-
-## Features
-
-- **YAML-first** — single source of truth for your CV data
-- **Styled Word output** — two-column layout with sidebar, photo, icons, and professional typography
-- **Themes** — built-in themes (classic, minimal, modern) or create your own
-- **Multilingual** — generate English and German versions (AI-powered translation)
-- **Tailor** — reorder and emphasize experience for a specific job description
-- **Bio** — generate a condensed one-pager bio document
-- **Validate** — check your YAML against the schema before building
-- **Watch mode** — auto-rebuild on file changes
-- **PDF export** — convert generated documents to PDF
+**resumake** turns a `cv.yaml` file into polished Word (.docx) documents with a two-column layout, photo, icons, and consistent theming. Optionally translate to German, tailor for a specific job, or generate a condensed one-pager bio — all from the command line.
 
 ## Quickstart
 
@@ -27,29 +19,48 @@ resumake init my-cv
 cd my-cv
 
 # Edit cv.yaml with your information, then build
-resumake build
+resumake build --lang en
 ```
 
 ## Installation
 
+**With [uv](https://docs.astral.sh/uv/) (recommended):**
+
 ```bash
-# Core (YAML → Word)
-uv tool install resumake
-
-# With AI features (translation, tailoring, bio generation)
-uv tool install resumake --with anthropic
-
-# With everything
-uv tool install resumake[all]
+uv tool install resumake                      # Core (YAML -> Word)
+uv tool install resumake --with anthropic     # + AI features
+uv tool install resumake[all]                 # Everything
 ```
 
-Or with pip:
+**With pip:**
 
 ```bash
 pip install resumake        # Core
 pip install resumake[ai]    # + AI features
 pip install resumake[all]   # Everything
 ```
+
+### Optional extras
+
+| Extra | Packages | Enables |
+|-------|----------|---------|
+| `ai` | `anthropic` | Translation, tailoring, AI-powered bio |
+| `pdf` | `docx2pdf` | PDF export via `--pdf` |
+| `watch` | `watchdog` | Auto-rebuild via `--watch` |
+| `all` | All of the above | Everything |
+
+## Features
+
+- **YAML-first** — single source of truth for all your CV data
+- **Styled Word output** — two-column layout with sidebar, photo, icons, clickable links, and professional typography
+- **Themes** — three built-in themes or create your own with a YAML file
+- **Multilingual** — generate English and German versions (AI-powered translation with local cache)
+- **Tailor** — reorder and emphasize experience for a specific job description
+- **Bio** — generate a condensed one-pager bio document
+- **Validate** — check your YAML against the schema before building
+- **Watch mode** — auto-rebuild on file changes
+- **PDF export** — convert generated documents to PDF
+- **Offline by default** — core build requires no API keys or network access
 
 ## Commands
 
@@ -58,17 +69,18 @@ pip install resumake[all]   # Everything
 Build CV documents from YAML source.
 
 ```bash
-resumake build                        # English + German (both)
+resumake build                        # English + German
 resumake build --lang en              # English only
-resumake build --theme minimal        # Use minimal theme
+resumake build --theme minimal        # Use a different theme
 resumake build --pdf                  # Also generate PDF
+resumake build --no-open              # Don't auto-open the files
 resumake build --watch                # Auto-rebuild on changes
-resumake build --retranslate          # Force fresh translation
+resumake build --retranslate          # Force fresh translation (ignores cache)
 ```
 
 ### `resumake tailor`
 
-Produce a tailored CV variant for a specific job description. Requires `resumake[ai]`.
+Produce a tailored CV variant for a specific job description. Requires AI.
 
 ```bash
 resumake tailor job-description.txt
@@ -102,6 +114,13 @@ resumake init                         # In current directory
 resumake init my-cv                   # In a new directory
 ```
 
+### Global options
+
+```bash
+resumake --version                    # Show version
+resumake --help                       # Show help
+```
+
 ## CV YAML Structure
 
 ```yaml
@@ -118,13 +137,15 @@ contact:
 links:
   - label: "LinkedIn"
     url: "https://linkedin.com/in/janedoe"
+  - label: "GitHub"
+    url: "https://github.com/janedoe"
 
 skills:
   leadership: ["Team Leadership", "Agile Coaching"]
   technical: ["Python", "TypeScript", "React"]
   languages:
     - name: "English"
-      level: "fluent"
+      level: "fluent"     # native | fluent | professional | basic
 
 profile: >
   Senior Software Engineer with 8+ years of experience...
@@ -134,6 +155,7 @@ experience:
     org: "TechCorp GmbH"
     start: "March 2021"
     end: "Present"
+    description: "Leading backend development for a SaaS platform."
     bullets:
       - "Architected a microservices migration reducing deployment time by 60%"
     tech_stack: ["Python", "FastAPI", "PostgreSQL"]
@@ -145,17 +167,19 @@ education:
     end: "2016"
 ```
 
-Run `resumake init` to get a complete example with all supported fields.
+Experience entries accept arbitrary extra fields (e.g. `tech_stack`, `soft_skills`, `project_methodology`) which are rendered as labeled metadata below the bullets.
+
+Run `resumake init` to get a complete example with all supported fields including testimonials, certifications, publications, volunteering, and references.
 
 ## Themes
 
 resumake ships with three built-in themes:
 
-| Theme | Description |
-|-------|-------------|
-| `classic` | Navy sidebar, teal accents (default) |
-| `minimal` | Grayscale, clean lines |
-| `modern` | Dark purple sidebar, red accents |
+| Theme | Sidebar | Accent | Fonts |
+|-------|---------|--------|-------|
+| **`classic`** (default) | Dark navy `#0F141F` | Teal `#0AA8A7` | Arial Narrow / Calibri |
+| **`minimal`** | Dark gray `#2C2C2C` | Gray `#555555` | Helvetica |
+| **`modern`** | Deep purple `#1A1A2E` | Red `#E94560` | Calibri |
 
 ```bash
 resumake build --theme modern
@@ -168,11 +192,11 @@ Create a `theme.yaml` in your project directory (auto-detected) or pass a path:
 ```yaml
 name: my-theme
 colors:
-  primary: "1A1A2E"
-  accent: "E94560"
-  text_light: "EAEAEA"
-  text_muted: "9A9ABF"
-  text_body: "1A1A2E"
+  primary: "1A1A2E"       # Sidebar background
+  accent: "E94560"        # Links, dividers, labels
+  text_light: "EAEAEA"    # Sidebar text
+  text_muted: "9A9ABF"    # Secondary text (dates, labels)
+  text_body: "1A1A2E"     # Main body text
 fonts:
   heading: "Calibri"
   body: "Calibri"
@@ -194,10 +218,28 @@ uv tool install resumake --with anthropic
 export ANTHROPIC_API_KEY=your-key-here
 ```
 
-- **Translation** caches results — re-runs are free unless you pass `--retranslate`
-- **Bio** falls back to deterministic selection when no AI is available
-- **Tailor** requires AI (it needs to understand the job description)
+| Feature | Requires AI | Fallback |
+|---------|-------------|----------|
+| Translation (`--lang de`) | Yes | Uses cached translation if available |
+| Tailoring (`resumake tailor`) | Yes | No fallback — AI required |
+| Bio (`resumake bio`) | Optional | Deterministic selection from CV data |
+
+Translation results are cached locally in `output/.cv_de_cache.yaml` — subsequent builds reuse the cache without API calls unless you pass `--retranslate`.
+
+See [PRIVACY.md](PRIVACY.md) for details on what data is sent and when.
+
+## Development
+
+```bash
+git clone https://github.com/fayssal-elmofatiche/resumake.git
+cd resumake
+uv sync --all-extras
+uv run pytest
+uv run ruff check .
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## License
 
-MIT
+[MIT](LICENSE)
