@@ -69,11 +69,27 @@ LABELS = {
 # ── Date parsing for sorting ──
 
 MONTH_MAP = {
-    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
     # German months
-    "januar": 1, "februar": 2, "märz": 3, "mai": 5, "juni": 6,
-    "juli": 7, "oktober": 10, "dezember": 12,
+    "januar": 1,
+    "februar": 2,
+    "märz": 3,
+    "mai": 5,
+    "juni": 6,
+    "juli": 7,
+    "oktober": 10,
+    "dezember": 12,
 }
 
 
@@ -98,10 +114,17 @@ def parse_start_date(date_str: str) -> tuple:
 
 def load_cv(yaml_path: Path, validate: bool = True) -> dict:
     """Load CV data from a YAML file, optionally validating against the schema."""
+    if not yaml_path.exists():
+        from .console import err_console
+
+        err_console.print(f"[red]Error:[/] CV file not found: [bold]{yaml_path}[/]")
+        err_console.print("\nTo get started, run: [bold]resumake init[/]")
+        raise SystemExit(1)
     with open(yaml_path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     if validate:
         from .schema import validate_cv
+
         validate_cv(data)
     return data
 
@@ -122,8 +145,9 @@ def convert_to_pdf(docx_path: Path) -> Path:
         from docx2pdf import convert
     except ImportError:
         from .console import err_console
+
         err_console.print("[red]Error:[/] 'docx2pdf' package required for PDF generation.")
-        err_console.print("Install with: [bold]pip install resumake\\[pdf][/]")
+        err_console.print("Install with: [bold]uv tool install resumake --with docx2pdf[/]")
         raise SystemExit(1)
     pdf_path = docx_path.with_suffix(".pdf")
     convert(str(docx_path), str(pdf_path))
@@ -145,5 +169,3 @@ def resolve_asset(filename: str) -> Path | None:
     if builtin_path.exists():
         return builtin_path
     return None
-
-

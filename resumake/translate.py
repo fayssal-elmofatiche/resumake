@@ -3,8 +3,8 @@
 import yaml
 
 from .console import console, err_console
-from .utils import CACHE_FILE, OUTPUT_DIR, load_cv
 from .llm import get_provider, strip_yaml_fences
+from .utils import CACHE_FILE, OUTPUT_DIR, load_cv
 
 
 def translate_cv(cv: dict, retranslate: bool = False) -> dict:
@@ -21,7 +21,7 @@ def translate_cv(cv: dict, retranslate: bool = False) -> dict:
             console.print("[yellow]No LLM provider available — falling back to cached translation.[/]")
             return load_cv(CACHE_FILE, validate=False)
         err_console.print("[red]Error:[/] No LLM provider available and no cached translation found.")
-        err_console.print("Set ANTHROPIC_API_KEY or install with: [bold]pip install resumake\\[ai][/]")
+        err_console.print("Set ANTHROPIC_API_KEY or install with: [bold]uv tool install resumake --with anthropic[/]")
         raise SystemExit(1)
 
     cv_yaml = yaml.dump(cv, allow_unicode=True, default_flow_style=False, sort_keys=False)

@@ -1,6 +1,6 @@
 """Tests for utils module."""
 
-from resumake.utils import slugify_name, parse_start_date
+from resumake.utils import parse_start_date, slugify_name
 
 
 def test_slugify_name_simple():

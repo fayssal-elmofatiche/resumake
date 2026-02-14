@@ -4,19 +4,20 @@ from pathlib import Path
 from typing import Optional
 
 from docx import Document
-from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls, qn
+from docx.shared import Cm, Pt
 
-from .utils import OUTPUT_DIR, SECTION_ICONS, LABELS, parse_start_date, slugify_name, resolve_asset
 from .theme import Theme, load_theme
+from .utils import LABELS, OUTPUT_DIR, SECTION_ICONS, parse_start_date, resolve_asset, slugify_name
 
 # Module-level theme — set by build_docx() before any builder runs
 _theme: Theme = Theme()
 
 
 # ── Low-level helpers ──
+
 
 def set_cell_shading(cell, color_hex):
     shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex}" w:val="clear"/>')
@@ -27,29 +28,29 @@ def remove_table_borders(table):
     tbl = table._tbl
     tblPr = tbl.tblPr
     if tblPr is None:
-        tblPr = parse_xml(f'<w:tblPr {nsdecls("w")}/>')
+        tblPr = parse_xml(f"<w:tblPr {nsdecls('w')}/>")
         tbl.insert(0, tblPr)
     borders = parse_xml(
-        f'<w:tblBorders {nsdecls("w")}>'
+        f"<w:tblBorders {nsdecls('w')}>"
         '  <w:top w:val="none" w:sz="0" w:space="0"/>'
         '  <w:left w:val="none" w:sz="0" w:space="0"/>'
         '  <w:bottom w:val="none" w:sz="0" w:space="0"/>'
         '  <w:right w:val="none" w:sz="0" w:space="0"/>'
         '  <w:insideH w:val="none" w:sz="0" w:space="0"/>'
         '  <w:insideV w:val="none" w:sz="0" w:space="0"/>'
-        '</w:tblBorders>'
+        "</w:tblBorders>"
     )
     tblPr.append(borders)
 
 
 def remove_cell_borders(cell):
     borders = parse_xml(
-        f'<w:tcBorders {nsdecls("w")}>'
+        f"<w:tcBorders {nsdecls('w')}>"
         '  <w:top w:val="none" w:sz="0" w:space="0"/>'
         '  <w:left w:val="none" w:sz="0" w:space="0"/>'
         '  <w:bottom w:val="none" w:sz="0" w:space="0"/>'
         '  <w:right w:val="none" w:sz="0" w:space="0"/>'
-        '</w:tcBorders>'
+        "</w:tcBorders>"
     )
     cell._tc.get_or_add_tcPr().append(borders)
 
@@ -63,19 +64,30 @@ def set_cell_width(cell, width_cm):
 def set_cell_margins(cell, top=0, bottom=0, left=0, right=0):
     def to_twips(cm_val):
         return int(cm_val * 567)
+
     margins = parse_xml(
-        f'<w:tcMar {nsdecls("w")}>'
+        f"<w:tcMar {nsdecls('w')}>"
         f'  <w:top w:w="{to_twips(top)}" w:type="dxa"/>'
         f'  <w:left w:w="{to_twips(left)}" w:type="dxa"/>'
         f'  <w:bottom w:w="{to_twips(bottom)}" w:type="dxa"/>'
         f'  <w:right w:w="{to_twips(right)}" w:type="dxa"/>'
-        f'</w:tcMar>'
+        f"</w:tcMar>"
     )
     cell._tc.get_or_add_tcPr().append(margins)
 
 
-def add_para(cell, text="", bold=False, italic=False, size=None, color=None,
-             font_name=None, align=None, space_before=Pt(0), space_after=Pt(0)):
+def add_para(
+    cell,
+    text="",
+    bold=False,
+    italic=False,
+    size=None,
+    color=None,
+    font_name=None,
+    align=None,
+    space_before=Pt(0),
+    space_after=Pt(0),
+):
     if size is None:
         size = Pt(_theme.sizes.body_pt)
     if color is None:
@@ -97,8 +109,37 @@ def add_para(cell, text="", bold=False, italic=False, size=None, color=None,
     return p
 
 
-def add_run_to_para(p, text, bold=False, italic=False, size=None, color=None,
-                    font_name=None):
+def add_hyperlink(paragraph, url, text, color=None, size=None, font_name=None):
+    """Add a clickable hyperlink to a paragraph."""
+    if color is None:
+        color = _theme.colors.accent_rgb
+    if size is None:
+        size = Pt(_theme.sizes.small_pt)
+    if font_name is None:
+        font_name = _theme.fonts.heading
+
+    part = paragraph.part
+    rel_type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
+    r_id = part.relate_to(url, rel_type, is_external=True)
+
+    ns_r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    hyperlink = parse_xml(f'<w:hyperlink {nsdecls("w")} r:id="{r_id}" xmlns:r="{ns_r}"/>')
+    new_run = parse_xml(f'<w:r {nsdecls("w")}><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>{text}</w:t></w:r>')
+
+    # Style the run
+    rPr = new_run.find(qn("w:rPr"))
+    color_val = color.hex_string if hasattr(color, "hex_string") else color
+    rPr.append(parse_xml(f'<w:color {nsdecls("w")} w:val="{color_val}"/>'))
+    rPr.append(parse_xml(f'<w:sz {nsdecls("w")} w:val="{int(size.pt * 2)}"/>'))
+    rPr.append(parse_xml(f'<w:rFonts {nsdecls("w")} w:ascii="{font_name}" w:hAnsi="{font_name}"/>'))
+    rPr.append(parse_xml(f'<w:u {nsdecls("w")} w:val="single"/>'))
+
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+    return hyperlink
+
+
+def add_run_to_para(p, text, bold=False, italic=False, size=None, color=None, font_name=None):
     if size is None:
         size = Pt(_theme.sizes.body_pt)
     if color is None:
@@ -115,6 +156,7 @@ def add_run_to_para(p, text, bold=False, italic=False, size=None, color=None,
 
 
 # ── Sidebar builders ──
+
 
 def build_sidebar_header(cell, cv, lang="en"):
     photo_path = resolve_asset(cv["photo"]) if cv.get("photo") else None
@@ -154,44 +196,89 @@ def build_sidebar_header(cell, cv, lang="en"):
         run1.font.color.rgb = name_color
         run1.font.name = name_font
 
-    add_para(cell, cv["title"], size=Pt(_theme.sizes.small_pt),
-             color=_theme.colors.text_muted_rgb, italic=True,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(12))
+    add_para(
+        cell,
+        cv["title"],
+        size=Pt(_theme.sizes.small_pt),
+        color=_theme.colors.text_muted_rgb,
+        italic=True,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_after=Pt(12),
+    )
 
 
 def build_sidebar_contact(cell, cv, lang="en"):
     L = LABELS[lang]
-    add_para(cell, L["details"], bold=True, size=Pt(_theme.sizes.subheading_pt),
-             color=_theme.colors.text_light_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_before=Pt(6), space_after=Pt(6))
+    add_para(
+        cell,
+        L["details"],
+        bold=True,
+        size=Pt(_theme.sizes.subheading_pt),
+        color=_theme.colors.text_light_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_before=Pt(6),
+        space_after=Pt(6),
+    )
 
     contact = cv["contact"]
     for text in [contact["address"], contact["phone"], contact["email"]]:
-        add_para(cell, text, size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_light_rgb,
-                 align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+        add_para(
+            cell,
+            text,
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_light_rgb,
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+            space_after=Pt(2),
+        )
 
     add_para(cell, "", space_before=Pt(4))
-    add_para(cell, L["nationality"], bold=True, size=Pt(_theme.sizes.body_pt),
-             color=_theme.colors.text_muted_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
-    add_para(cell, contact["nationality"], size=Pt(_theme.sizes.small_pt),
-             color=_theme.colors.text_light_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(6))
+    add_para(
+        cell,
+        L["nationality"],
+        bold=True,
+        size=Pt(_theme.sizes.body_pt),
+        color=_theme.colors.text_muted_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_after=Pt(2),
+    )
+    add_para(
+        cell,
+        contact["nationality"],
+        size=Pt(_theme.sizes.small_pt),
+        color=_theme.colors.text_light_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_after=Pt(6),
+    )
 
 
 def build_sidebar_links(cell, cv, lang="en"):
     L = LABELS[lang]
     if not cv.get("links"):
         return
-    add_para(cell, L["links"], bold=True, size=Pt(_theme.sizes.subheading_pt),
-             color=_theme.colors.text_light_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_before=Pt(8), space_after=Pt(6))
+    add_para(
+        cell,
+        L["links"],
+        bold=True,
+        size=Pt(_theme.sizes.subheading_pt),
+        color=_theme.colors.text_light_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_before=Pt(8),
+        space_after=Pt(6),
+    )
 
     for link in cv["links"]:
-        add_para(cell, link["label"], size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.accent_rgb,
-                 align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+        if link.get("url"):
+            p = add_para(cell, "", size=Pt(_theme.sizes.small_pt), align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+            add_hyperlink(p, link["url"], link["label"], color=_theme.colors.accent_rgb, size=Pt(_theme.sizes.small_pt))
+        else:
+            add_para(
+                cell,
+                link["label"],
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.accent_rgb,
+                align=WD_ALIGN_PARAGRAPH.CENTER,
+                space_after=Pt(2),
+            )
 
 
 def build_sidebar_skills(cell, cv, lang="en"):
@@ -200,25 +287,48 @@ def build_sidebar_skills(cell, cv, lang="en"):
     if not skills:
         return
 
-    add_para(cell, L["skills"], bold=True, size=Pt(_theme.sizes.subheading_pt),
-             color=_theme.colors.text_light_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_before=Pt(10), space_after=Pt(6))
+    add_para(
+        cell,
+        L["skills"],
+        bold=True,
+        size=Pt(_theme.sizes.subheading_pt),
+        color=_theme.colors.text_light_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_before=Pt(10),
+        space_after=Pt(6),
+    )
 
     if skills.get("leadership"):
-        add_para(cell, L["leadership_skills"], bold=True, size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_muted_rgb,
-                 align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(4))
+        add_para(
+            cell,
+            L["leadership_skills"],
+            bold=True,
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+            space_after=Pt(4),
+        )
         for skill in skills["leadership"]:
-            add_para(cell, skill, size=Pt(_theme.sizes.small_pt),
-                     color=_theme.colors.text_light_rgb,
-                     align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+            add_para(
+                cell,
+                skill,
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_light_rgb,
+                align=WD_ALIGN_PARAGRAPH.CENTER,
+                space_after=Pt(2),
+            )
 
     if skills.get("technical"):
         add_para(cell, "", space_before=Pt(4))
         for skill in skills["technical"]:
-            add_para(cell, skill, size=Pt(_theme.sizes.small_pt),
-                     color=_theme.colors.text_light_rgb,
-                     align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+            add_para(
+                cell,
+                skill,
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_light_rgb,
+                align=WD_ALIGN_PARAGRAPH.CENTER,
+                space_after=Pt(2),
+            )
 
 
 def build_sidebar_languages(cell, cv, lang="en"):
@@ -227,22 +337,45 @@ def build_sidebar_languages(cell, cv, lang="en"):
     if not languages:
         return
 
-    level_map_en = {"native": "Native", "fluent": "Fluent", "professional": "Professional", "basic": "Basic"}
-    level_map_de = {"native": "Muttersprache", "fluent": "Fließend", "professional": "Verhandlungssicher", "basic": "Grundkenntnisse"}
+    level_map_en = {
+        "native": "Native",
+        "fluent": "Fluent",
+        "professional": "Professional",
+        "basic": "Basic",
+    }
+    level_map_de = {
+        "native": "Muttersprache",
+        "fluent": "Fließend",
+        "professional": "Verhandlungssicher",
+        "basic": "Grundkenntnisse",
+    }
     level_map = level_map_de if lang == "de" else level_map_en
 
-    add_para(cell, L["languages"], bold=True, size=Pt(_theme.sizes.subheading_pt),
-             color=_theme.colors.text_light_rgb,
-             align=WD_ALIGN_PARAGRAPH.CENTER, space_before=Pt(10), space_after=Pt(6))
+    add_para(
+        cell,
+        L["languages"],
+        bold=True,
+        size=Pt(_theme.sizes.subheading_pt),
+        color=_theme.colors.text_light_rgb,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+        space_before=Pt(10),
+        space_after=Pt(6),
+    )
 
     for lang in languages:
         level = level_map.get(lang["level"], lang["level"])
-        add_para(cell, f"{lang['name']} ({level})", size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_light_rgb,
-                 align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(2))
+        add_para(
+            cell,
+            f"{lang['name']} ({level})",
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_light_rgb,
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+            space_after=Pt(2),
+        )
 
 
 # ── Main content builders ──
+
 
 def add_section_heading(cell, title, icon_key=None):
     icon_file = SECTION_ICONS.get(icon_key or title)
@@ -268,9 +401,9 @@ def add_section_heading(cell, title, icon_key=None):
     p_line.paragraph_format.space_after = Pt(4)
     pPr = p_line._p.get_or_add_pPr()
     pBdr = parse_xml(
-        f'<w:pBdr {nsdecls("w")}>'
+        f"<w:pBdr {nsdecls('w')}>"
         f'  <w:bottom w:val="single" w:sz="4" w:space="1" w:color="{_theme.colors.accent}"/>'
-        f'</w:pBdr>'
+        f"</w:pBdr>"
     )
     pPr.append(pBdr)
 
@@ -279,44 +412,55 @@ def add_labeled_line(cell, label, value):
     p = cell.add_paragraph()
     p.paragraph_format.space_before = Pt(1)
     p.paragraph_format.space_after = Pt(1)
-    add_run_to_para(p, f"{label}: ", bold=True, size=Pt(_theme.sizes.small_pt),
-                    color=_theme.colors.accent_rgb)
-    add_run_to_para(p, value, size=Pt(_theme.sizes.small_pt),
-                    color=_theme.colors.text_muted_rgb)
+    add_run_to_para(p, f"{label}: ", bold=True, size=Pt(_theme.sizes.small_pt), color=_theme.colors.accent_rgb)
+    add_run_to_para(p, value, size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb)
 
 
 def build_main_profile(cell, cv, lang="en"):
     L = LABELS[lang]
     add_section_heading(cell, L["profile"], icon_key="Profile")
-    add_para(cell, cv["profile"].strip(), size=Pt(_theme.sizes.body_pt),
-             color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
-             space_after=Pt(4))
+    add_para(
+        cell,
+        cv["profile"].strip(),
+        size=Pt(_theme.sizes.body_pt),
+        color=_theme.colors.text_body_rgb,
+        font_name=_theme.fonts.body,
+        space_after=Pt(4),
+    )
 
     if cv.get("testimonials"):
-        add_para(cell, L["testimonials_heading"], bold=True, size=Pt(_theme.sizes.body_pt),
-                 color=_theme.colors.primary_rgb,
-                 space_before=Pt(8), space_after=Pt(4))
+        add_para(
+            cell,
+            L["testimonials_heading"],
+            bold=True,
+            size=Pt(_theme.sizes.body_pt),
+            color=_theme.colors.primary_rgb,
+            space_before=Pt(8),
+            space_after=Pt(4),
+        )
         for t in cv["testimonials"]:
             if t.get("quote"):
-                add_para(cell, t["quote"], italic=True, size=Pt(_theme.sizes.body_pt),
-                         color=_theme.colors.text_muted_rgb, font_name=_theme.fonts.body,
-                         space_after=Pt(4))
+                add_para(
+                    cell,
+                    t["quote"],
+                    italic=True,
+                    size=Pt(_theme.sizes.body_pt),
+                    color=_theme.colors.text_muted_rgb,
+                    font_name=_theme.fonts.body,
+                    space_after=Pt(4),
+                )
             p = cell.add_paragraph()
             p.paragraph_format.space_after = Pt(2)
-            add_run_to_para(p, t["name"], bold=True, size=Pt(_theme.sizes.body_pt),
-                            color=_theme.colors.primary_rgb)
-            add_run_to_para(p, f"\n{t['role']}", size=Pt(_theme.sizes.small_pt),
-                            color=_theme.colors.text_muted_rgb)
-            add_run_to_para(p, f"\n{t['org']}", size=Pt(_theme.sizes.small_pt),
-                            color=_theme.colors.text_muted_rgb)
+            add_run_to_para(p, t["name"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
+            add_run_to_para(p, f"\n{t['role']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb)
+            add_run_to_para(p, f"\n{t['org']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb)
 
 
 def build_main_experience(cell, cv, lang="en"):
     L = LABELS[lang]
     add_section_heading(cell, L["experience"], icon_key="Project / Employment History")
 
-    entries = sorted(cv.get("experience", []),
-                     key=lambda e: parse_start_date(e.get("start", "")), reverse=True)
+    entries = sorted(cv.get("experience", []), key=lambda e: parse_start_date(e.get("start", "")), reverse=True)
     for entry in entries:
         title_text = entry["title"]
         if entry.get("org"):
@@ -325,24 +469,39 @@ def build_main_experience(cell, cv, lang="en"):
         p_title = cell.add_paragraph()
         p_title.paragraph_format.space_before = Pt(8)
         p_title.paragraph_format.space_after = Pt(1)
-        add_run_to_para(p_title, title_text, bold=True, size=Pt(_theme.sizes.body_pt),
-                        color=_theme.colors.primary_rgb)
+        add_run_to_para(p_title, title_text, bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
 
-        add_para(cell, f"{entry['start']} — {entry['end']}", size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_muted_rgb, space_after=Pt(2))
+        add_para(
+            cell,
+            f"{entry['start']} — {entry['end']}",
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            space_after=Pt(2),
+        )
 
         if entry.get("description"):
-            add_para(cell, entry["description"], italic=True, size=Pt(_theme.sizes.body_pt),
-                     color=_theme.colors.text_muted_rgb, font_name=_theme.fonts.body,
-                     space_after=Pt(2))
+            add_para(
+                cell,
+                entry["description"],
+                italic=True,
+                size=Pt(_theme.sizes.body_pt),
+                color=_theme.colors.text_muted_rgb,
+                font_name=_theme.fonts.body,
+                space_after=Pt(2),
+            )
 
         for bullet in entry.get("bullets", []):
             p = cell.add_paragraph(style="List Bullet")
             p.paragraph_format.space_before = Pt(1)
             p.paragraph_format.space_after = Pt(1)
             p.text = ""
-            add_run_to_para(p, bullet, size=Pt(_theme.sizes.small_pt),
-                            color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body)
+            add_run_to_para(
+                p,
+                bullet,
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_body_rgb,
+                font_name=_theme.fonts.body,
+            )
 
         meta_fields = [
             ("soft_skills", "Soft Skills"),
@@ -373,22 +532,41 @@ def build_main_education(cell, cv, lang="en"):
         p_title = cell.add_paragraph()
         p_title.paragraph_format.space_before = Pt(6)
         p_title.paragraph_format.space_after = Pt(1)
-        add_run_to_para(p_title, f"{entry['degree']}, {entry['institution']}",
-                        bold=True, size=Pt(_theme.sizes.body_pt),
-                        color=_theme.colors.primary_rgb)
+        add_run_to_para(
+            p_title,
+            f"{entry['degree']}, {entry['institution']}",
+            bold=True,
+            size=Pt(_theme.sizes.body_pt),
+            color=_theme.colors.primary_rgb,
+        )
 
-        add_para(cell, f"{entry['start']} — {entry['end']}", size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_muted_rgb, space_after=Pt(2))
+        add_para(
+            cell,
+            f"{entry['start']} — {entry['end']}",
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            space_after=Pt(2),
+        )
 
         if entry.get("description"):
-            add_para(cell, entry["description"], size=Pt(_theme.sizes.body_pt),
-                     color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
-                     space_after=Pt(2))
+            add_para(
+                cell,
+                entry["description"],
+                size=Pt(_theme.sizes.body_pt),
+                color=_theme.colors.text_body_rgb,
+                font_name=_theme.fonts.body,
+                space_after=Pt(2),
+            )
 
         if entry.get("details"):
-            add_para(cell, entry["details"], size=Pt(_theme.sizes.small_pt),
-                     color=_theme.colors.text_muted_rgb, font_name=_theme.fonts.body,
-                     space_after=Pt(2))
+            add_para(
+                cell,
+                entry["details"],
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_muted_rgb,
+                font_name=_theme.fonts.body,
+                space_after=Pt(2),
+            )
 
 
 def build_main_volunteering(cell, cv, lang="en"):
@@ -401,17 +579,31 @@ def build_main_volunteering(cell, cv, lang="en"):
         p_title = cell.add_paragraph()
         p_title.paragraph_format.space_before = Pt(6)
         p_title.paragraph_format.space_after = Pt(1)
-        add_run_to_para(p_title, f"{entry['title']} — {entry['org']}",
-                        bold=True, size=Pt(_theme.sizes.body_pt),
-                        color=_theme.colors.primary_rgb)
+        add_run_to_para(
+            p_title,
+            f"{entry['title']} — {entry['org']}",
+            bold=True,
+            size=Pt(_theme.sizes.body_pt),
+            color=_theme.colors.primary_rgb,
+        )
 
-        add_para(cell, f"{entry['start']} — {entry['end']}", size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_muted_rgb, space_after=Pt(2))
+        add_para(
+            cell,
+            f"{entry['start']} — {entry['end']}",
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            space_after=Pt(2),
+        )
 
         if entry.get("description"):
-            add_para(cell, entry["description"], size=Pt(_theme.sizes.body_pt),
-                     color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
-                     space_after=Pt(2))
+            add_para(
+                cell,
+                entry["description"],
+                size=Pt(_theme.sizes.body_pt),
+                color=_theme.colors.text_body_rgb,
+                font_name=_theme.fonts.body,
+                space_after=Pt(2),
+            )
 
 
 def build_main_references(cell, cv, lang="en"):
@@ -419,9 +611,14 @@ def build_main_references(cell, cv, lang="en"):
     if not cv.get("references"):
         return
     add_section_heading(cell, L["references"], icon_key="References")
-    add_para(cell, cv["references"], size=Pt(_theme.sizes.body_pt),
-             color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
-             space_after=Pt(4))
+    add_para(
+        cell,
+        cv["references"],
+        size=Pt(_theme.sizes.body_pt),
+        color=_theme.colors.text_body_rgb,
+        font_name=_theme.fonts.body,
+        space_after=Pt(4),
+    )
 
 
 def build_main_certifications(cell, cv, lang="en"):
@@ -438,16 +635,25 @@ def build_main_certifications(cell, cv, lang="en"):
         p_title = cell.add_paragraph()
         p_title.paragraph_format.space_before = Pt(6)
         p_title.paragraph_format.space_after = Pt(1)
-        add_run_to_para(p_title, title_text, bold=True, size=Pt(_theme.sizes.body_pt),
-                        color=_theme.colors.primary_rgb)
+        add_run_to_para(p_title, title_text, bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
 
-        add_para(cell, f"{entry['start']} — {entry['end']}", size=Pt(_theme.sizes.small_pt),
-                 color=_theme.colors.text_muted_rgb, space_after=Pt(2))
+        add_para(
+            cell,
+            f"{entry['start']} — {entry['end']}",
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            space_after=Pt(2),
+        )
 
         if entry.get("description"):
-            add_para(cell, entry["description"], size=Pt(_theme.sizes.body_pt),
-                     color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
-                     space_after=Pt(2))
+            add_para(
+                cell,
+                entry["description"],
+                size=Pt(_theme.sizes.body_pt),
+                color=_theme.colors.text_body_rgb,
+                font_name=_theme.fonts.body,
+                space_after=Pt(2),
+            )
 
 
 def build_main_publications(cell, cv, lang="en"):
@@ -460,13 +666,14 @@ def build_main_publications(cell, cv, lang="en"):
         p = cell.add_paragraph()
         p.paragraph_format.space_before = Pt(4)
         p.paragraph_format.space_after = Pt(2)
-        add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt),
-                        color=_theme.colors.primary_rgb)
-        add_run_to_para(p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt),
-                        color=_theme.colors.text_muted_rgb)
+        add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
+        add_run_to_para(
+            p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
+        )
 
 
 # ── Document assembly ──
+
 
 def build_docx(cv: dict, lang: str, theme: Optional[Theme] = None) -> Path:
     """Build a complete Word document from CV data."""
@@ -493,12 +700,12 @@ def build_docx(cv: dict, lang: str, theme: Optional[Theme] = None) -> Path:
     remove_table_borders(table)
 
     tbl = table._tbl
-    tblGrid = tbl.find(qn('w:tblGrid'))
+    tblGrid = tbl.find(qn("w:tblGrid"))
     if tblGrid is not None:
-        gridCols = tblGrid.findall(qn('w:gridCol'))
+        gridCols = tblGrid.findall(qn("w:gridCol"))
         if len(gridCols) >= 2:
-            gridCols[0].set(qn('w:w'), str(int(layout.sidebar_width_cm * 567)))
-            gridCols[1].set(qn('w:w'), str(int(layout.main_width_cm * 567)))
+            gridCols[0].set(qn("w:w"), str(int(layout.sidebar_width_cm * 567)))
+            gridCols[1].set(qn("w:w"), str(int(layout.main_width_cm * 567)))
 
     sidebar = table.cell(0, 0)
     main = table.cell(0, 1)

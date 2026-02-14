@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from docx.shared import RGBColor, Pt, Cm
+from docx.shared import RGBColor
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 BUILTIN_THEMES_DIR = PACKAGE_DIR / "themes"
@@ -19,11 +19,11 @@ def _hex_to_rgb(hex_str: str) -> RGBColor:
 
 @dataclass
 class ThemeColors:
-    primary: str = "0F141F"       # Sidebar bg, name, headings
-    accent: str = "0AA8A7"        # Links, section lines, accents
-    text_light: str = "FFFFFF"    # Sidebar text
-    text_muted: str = "7A8599"    # Dates, secondary text
-    text_body: str = "333333"     # Main body text
+    primary: str = "0F141F"  # Sidebar bg, name, headings
+    accent: str = "0AA8A7"  # Links, section lines, accents
+    text_light: str = "FFFFFF"  # Sidebar text
+    text_muted: str = "7A8599"  # Dates, secondary text
+    text_body: str = "333333"  # Main body text
 
     @property
     def primary_rgb(self) -> RGBColor:

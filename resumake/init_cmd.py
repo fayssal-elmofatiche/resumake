@@ -7,14 +7,16 @@ from typing import Annotated, Optional
 import typer
 
 from .console import console
-from .utils import PACKAGE_DIR, BUILTIN_ASSETS_DIR
-
+from .utils import BUILTIN_ASSETS_DIR, PACKAGE_DIR
 
 TEMPLATES_DIR = PACKAGE_DIR / "templates"
 
 
 def init(
-    directory: Annotated[Optional[Path], typer.Argument(help="Directory to initialize. Defaults to current directory.")] = None,
+    directory: Annotated[
+        Optional[Path],
+        typer.Argument(help="Directory to initialize. Defaults to current directory."),
+    ] = None,
 ):
     """Scaffold a new resumake project with an example CV and assets."""
     target = (directory or Path.cwd()).resolve()
@@ -45,13 +47,7 @@ def init(
 
     gitignore = target / ".gitignore"
     if not gitignore.exists():
-        gitignore.write_text(
-            "output/\n"
-            "assets/profile.*\n"
-            ".venv/\n"
-            "__pycache__/\n"
-            "*.pyc\n"
-        )
+        gitignore.write_text("output/\nassets/profile.*\n.venv/\n__pycache__/\n*.pyc\n")
         console.print(f"[green]Created:[/] {gitignore}")
 
     console.print(f"\n[bold]Project ready at {target}[/]")

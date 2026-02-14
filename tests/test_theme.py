@@ -2,7 +2,7 @@
 
 import pytest
 
-from resumake.theme import Theme, load_theme, list_themes
+from resumake.theme import Theme, list_themes, load_theme
 
 
 def test_default_theme():
@@ -43,6 +43,7 @@ def test_list_themes():
 
 def test_theme_colors_rgb():
     from docx.shared import RGBColor
+
     theme = Theme()
     rgb = theme.colors.primary_rgb
     assert isinstance(rgb, RGBColor)

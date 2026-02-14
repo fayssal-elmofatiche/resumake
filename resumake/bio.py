@@ -3,27 +3,37 @@
 from pathlib import Path
 from typing import Annotated, Optional
 
-import yaml
 import typer
+import yaml
 from docx import Document
-from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
+from docx.shared import Cm, Pt
 
-from .utils import (
-    DEFAULT_YAML, OUTPUT_DIR,
-    LABELS, load_cv, open_file, convert_to_pdf, parse_start_date,
-    slugify_name, resolve_asset,
+from .docx_builder import (
+    add_hyperlink,
+    remove_table_borders,
+    set_cell_width,
 )
-from .translate import translate_cv
 from .theme import Theme, load_theme
-from .docx_builder import add_para, add_run_to_para, set_cell_shading, remove_table_borders, remove_cell_borders, set_cell_width, set_cell_margins
+from .translate import translate_cv
+from .utils import (
+    DEFAULT_YAML,
+    OUTPUT_DIR,
+    convert_to_pdf,
+    load_cv,
+    open_file,
+    parse_start_date,
+    resolve_asset,
+    slugify_name,
+)
 
 
 def select_bio_content(cv: dict) -> dict:
     """Use an LLM to select and condense CV content for a one-pager bio."""
     from .llm import get_provider, strip_yaml_fences
+
     provider = get_provider()
 
     cv_yaml = yaml.dump(cv, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -42,7 +52,8 @@ def select_bio_content(cv: dict) -> dict:
             "  email: <email>\n"
             "  phone: <phone>\n"
             "  address: <city, country>\n"
-            "bio_summary: <3-4 sentences in third person summarizing the person's career, expertise, and value proposition>\n"
+            "bio_summary: <3-4 sentences in third person summarizing the person's career, "
+            "expertise, and value proposition>\n"
             "career_highlights:\n"
             "  - <highlight 1>\n"
             "  - <highlight 2>\n"
@@ -83,8 +94,7 @@ def select_bio_content_deterministic(cv: dict) -> dict:
         reverse=True,
     )
     current_roles = [
-        {"title": e["title"], "org": e.get("org", ""), "period": f"{e['start']} — {e['end']}"}
-        for e in entries[:3]
+        {"title": e["title"], "org": e.get("org", ""), "period": f"{e['start']} — {e['end']}"} for e in entries[:3]
     ]
 
     # Collect top bullets as highlights
@@ -200,11 +210,26 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
     links = bio_data.get("links", [])
     if links:
         p_links = right_cell.add_paragraph()
-        link_labels = [l["label"] for l in links]
-        run_l = p_links.add_run("  |  ".join(link_labels))
-        run_l.font.size = Pt(t.sizes.small_pt)
-        run_l.font.color.rgb = t.colors.accent_rgb
-        run_l.font.name = t.fonts.heading
+        for i, link in enumerate(links):
+            if i > 0:
+                sep = p_links.add_run("  |  ")
+                sep.font.size = Pt(t.sizes.small_pt)
+                sep.font.color.rgb = t.colors.text_muted_rgb
+                sep.font.name = t.fonts.heading
+            if link.get("url"):
+                add_hyperlink(
+                    p_links,
+                    link["url"],
+                    link["label"],
+                    color=t.colors.accent_rgb,
+                    size=Pt(t.sizes.small_pt),
+                    font_name=t.fonts.heading,
+                )
+            else:
+                run_l = p_links.add_run(link["label"])
+                run_l.font.size = Pt(t.sizes.small_pt)
+                run_l.font.color.rgb = t.colors.accent_rgb
+                run_l.font.name = t.fonts.heading
 
     # ── Horizontal divider ──
     p_div = doc.add_paragraph()
@@ -212,9 +237,7 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
     p_div.paragraph_format.space_after = Pt(8)
     pPr = p_div._p.get_or_add_pPr()
     pBdr = parse_xml(
-        f'<w:pBdr {nsdecls("w")}>'
-        f'  <w:bottom w:val="single" w:sz="4" w:space="1" w:color="{t.colors.accent}"/>'
-        f'</w:pBdr>'
+        f'<w:pBdr {nsdecls("w")}>  <w:bottom w:val="single" w:sz="4" w:space="1" w:color="{t.colors.accent}"/></w:pBdr>'
     )
     pPr.append(pBdr)
 
@@ -307,7 +330,10 @@ def bio(
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
-    theme: Annotated[Optional[str], typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml.")] = None,
+    theme: Annotated[
+        Optional[str],
+        typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
+    ] = None,
 ):
     """Generate a condensed one-pager bio document."""
     cv_en = load_cv(source)
@@ -317,6 +343,7 @@ def bio(
     # Try LLM, fall back to deterministic
     try:
         from .llm import get_provider
+
         get_provider()  # check availability
         bio_data = select_bio_content(cv_en)
     except RuntimeError:

@@ -28,6 +28,7 @@ class AnthropicProvider(LLMProvider):
 
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929"):
         import anthropic
+
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
 
@@ -53,10 +54,10 @@ def get_provider() -> LLMProvider:
         except ImportError:
             raise RuntimeError(
                 "Anthropic API key found but 'anthropic' package is not installed.\n"
-                "Install with: pip install resumake[ai]"
+                "Install with: uv tool install resumake --with anthropic"
             )
 
     raise RuntimeError(
         "No LLM provider configured.\n"
-        "Set ANTHROPIC_API_KEY to enable AI features, or install with: pip install resumake[ai]"
+        "Set ANTHROPIC_API_KEY to enable AI features, or install with: uv tool install resumake --with anthropic"
     )

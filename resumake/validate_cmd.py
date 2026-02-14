@@ -6,8 +6,8 @@ from typing import Annotated
 import typer
 
 from .console import console, err_console
-from .utils import DEFAULT_YAML, load_cv
 from .schema import validate_cv
+from .utils import DEFAULT_YAML, load_cv
 
 
 def validate(
@@ -26,6 +26,7 @@ def validate(
     except Exception as e:
         err_console.print(f"[red]Validation errors in {source}:[/]\n")
         from pydantic import ValidationError
+
         if isinstance(e, ValidationError):
             for err in e.errors():
                 loc = " -> ".join(str(x) for x in err["loc"])

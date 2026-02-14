@@ -8,10 +8,10 @@ import typer
 from rich.table import Table
 
 from .console import console, err_console
-from .utils import DEFAULT_YAML, load_cv, open_file, convert_to_pdf
-from .translate import translate_cv
 from .docx_builder import build_docx
 from .theme import load_theme
+from .translate import translate_cv
+from .utils import DEFAULT_YAML, convert_to_pdf, load_cv, open_file
 
 
 def _print_summary(outputs: list[Path]):
@@ -33,11 +33,17 @@ def _print_summary(outputs: list[Path]):
 
 def build(
     lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Omit to generate both.")] = None,
-    retranslate: Annotated[bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")] = False,
+    retranslate: Annotated[
+        bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")
+    ] = False,
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF from the Word documents.")] = False,
     watch: Annotated[bool, typer.Option("--watch", help="Watch the source YAML for changes and auto-rebuild.")] = False,
-    theme: Annotated[Optional[str], typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml.")] = None,
+    theme: Annotated[
+        Optional[str],
+        typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
+    ] = None,
+    open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated files.")] = True,
 ):
     """Build full CV documents from YAML source."""
     langs = [lang] if lang else ["en", "de"]
@@ -46,11 +52,11 @@ def build(
     def do_build():
         cv_en = load_cv(source)
         outputs = []
-        for l in langs:
+        for target_lang in langs:
             cv = cv_en
-            if l == "de":
+            if target_lang == "de":
                 cv = translate_cv(cv_en, retranslate=retranslate)
-            output_path = build_docx(cv, l, theme=resolved_theme)
+            output_path = build_docx(cv, target_lang, theme=resolved_theme)
             outputs.append(output_path)
             if pdf:
                 pdf_path = convert_to_pdf(output_path)
@@ -60,16 +66,17 @@ def build(
     # Initial build
     outputs = do_build()
     _print_summary(outputs)
-    for output_path in outputs:
-        open_file(output_path)
+    if open:
+        for output_path in outputs:
+            open_file(output_path)
 
     if watch:
         try:
-            from watchdog.observers import Observer
             from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
         except ImportError:
             err_console.print("[red]Error:[/] 'watchdog' package required for --watch.")
-            err_console.print("Install with: [bold]pip install resumake\\[watch][/]")
+            err_console.print("Install with: [bold]uv tool install resumake --with watchdog[/]")
             raise typer.Exit(1)
 
         class RebuildHandler(FileSystemEventHandler):
