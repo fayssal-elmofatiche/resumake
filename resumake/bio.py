@@ -326,7 +326,7 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
 
 
 def bio(
-    lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Default: en.")] = "en",
+    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = "en",
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
@@ -351,8 +351,8 @@ def bio(
         bio_data = select_bio_content_deterministic(cv_en)
 
     # Translate bio data if needed
-    if lang == "de":
-        bio_data = translate_cv(bio_data, retranslate=True)
+    if lang != "en":
+        bio_data = translate_cv(bio_data, lang=lang, retranslate=True)
 
     resolved_theme = load_theme(theme)
     output_path = build_bio_docx(bio_data, lang, theme=resolved_theme)

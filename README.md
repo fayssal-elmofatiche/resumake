@@ -6,7 +6,7 @@
 
 Build styled CV documents from a single YAML source.
 
-**resumake** turns a `cv.yaml` file into polished Word (.docx) documents with a two-column layout, photo, icons, and consistent theming. Optionally translate to German, tailor for a specific job, or generate a condensed one-pager bio — all from the command line.
+**resumake** turns a `cv.yaml` file into polished Word (.docx) documents with a two-column layout, photo, icons, and consistent theming. Translate to any language, tailor for a specific job, generate a cover letter, or export to Markdown/HTML/JSON — all from the command line.
 
 ## Quickstart
 
@@ -45,7 +45,7 @@ pip install resumake[all]         # Everything
 ### Optional extras
 
 | Extra | Packages | Enables |
-|-------|----------|---------|
+| --- | --- | --- |
 | `anthropic` | `anthropic` | AI features via Anthropic Claude |
 | `openai` | `openai` | AI features via OpenAI (or any compatible API) |
 | `pdf` | `docx2pdf` | PDF export via `--pdf` |
@@ -56,12 +56,12 @@ pip install resumake[all]         # Everything
 
 - **YAML-first** — single source of truth for all your CV data
 - **Styled Word output** — two-column layout with sidebar, photo, icons, clickable links, and professional typography
-- **Themes** — three built-in themes or create your own with a YAML file
-- **Multilingual** — generate English and German versions (AI-powered translation with local cache)
+- **Themes** — three built-in themes or bring your own via YAML
+- **Multilingual** — translate to any language via AI, with per-language caching and auto-invalidation
 - **Tailor** — reorder and emphasize experience for a specific job description
-- **Bio** — generate a condensed one-pager bio document
 - **Cover letter** — AI-generated cover letter matched to a job description
-- **Export** — convert your CV to Markdown, HTML, or JSON
+- **Bio** — generate a condensed one-pager bio document
+- **Export** — convert to Markdown, HTML, or JSON
 - **Preview** — instant HTML preview in your browser
 - **Diff** — compare two CV YAML files side by side
 - **Validate** — check your YAML against the schema before building
@@ -76,8 +76,9 @@ pip install resumake[all]         # Everything
 Build CV documents from YAML source.
 
 ```bash
-resumake build                        # English + German
+resumake build                        # English + German (default)
 resumake build --lang en              # English only
+resumake build --lang fr              # French (any language code works)
 resumake build --theme minimal        # Use a different theme
 resumake build --pdf                  # Also generate PDF
 resumake build --no-open              # Don't auto-open the files
@@ -94,6 +95,15 @@ resumake tailor job-description.txt
 resumake tailor job-description.txt --lang de --pdf
 ```
 
+### `resumake cover`
+
+Generate a cover letter matching your CV to a job description. Requires AI.
+
+```bash
+resumake cover job-description.txt
+resumake cover job-description.txt --lang fr --pdf --theme modern
+```
+
 ### `resumake bio`
 
 Generate a condensed one-pager bio document.
@@ -101,24 +111,6 @@ Generate a condensed one-pager bio document.
 ```bash
 resumake bio                          # Uses AI if available, else deterministic
 resumake bio --lang de --pdf
-```
-
-### `resumake validate`
-
-Check your CV YAML against the schema.
-
-```bash
-resumake validate
-resumake validate --source path/to/cv.yaml
-```
-
-### `resumake init`
-
-Scaffold a new resumake project with an example CV and icons.
-
-```bash
-resumake init                         # In current directory
-resumake init my-cv                   # In a new directory
 ```
 
 ### `resumake export`
@@ -138,7 +130,6 @@ Generate an HTML preview and open it in your browser.
 
 ```bash
 resumake preview
-resumake preview --source path/to/cv.yaml
 ```
 
 ### `resumake diff`
@@ -149,21 +140,29 @@ Compare two CV YAML files and show what changed.
 resumake diff cv.yaml cv_tailored.yaml
 ```
 
-### `resumake cover-letter`
-
-Generate a cover letter matching your CV to a job description. Requires AI.
-
-```bash
-resumake cover-letter job-description.txt
-resumake cover-letter job-description.txt --pdf --theme modern
-```
-
 ### `resumake themes`
 
 List available built-in themes with color previews.
 
 ```bash
 resumake themes
+```
+
+### `resumake validate`
+
+Check your CV YAML against the schema.
+
+```bash
+resumake validate
+```
+
+### `resumake init`
+
+Scaffold a new resumake project with an example CV and icons.
+
+```bash
+resumake init                         # In current directory
+resumake init my-cv                   # In a new directory
 ```
 
 ### Global options
@@ -221,20 +220,21 @@ education:
 
 Experience entries accept arbitrary extra fields (e.g. `tech_stack`, `soft_skills`, `project_methodology`) which are rendered as labeled metadata below the bullets.
 
-Run `resumake init` to get a complete example with all supported fields including testimonials, certifications, publications, volunteering, and references.
+Run `resumake init` to get a complete example with all supported sections including testimonials, certifications, publications, volunteering, and references.
 
 ## Themes
 
 resumake ships with three built-in themes:
 
 | Theme | Sidebar | Accent | Fonts |
-|-------|---------|--------|-------|
+| --- | --- | --- | --- |
 | **`classic`** (default) | Dark navy `#0F141F` | Teal `#0AA8A7` | Arial Narrow / Calibri |
 | **`minimal`** | Dark gray `#2C2C2C` | Gray `#555555` | Helvetica |
 | **`modern`** | Deep purple `#1A1A2E` | Red `#E94560` | Calibri |
 
 ```bash
 resumake build --theme modern
+resumake themes                       # List all themes with color swatches
 ```
 
 ### Custom themes
@@ -263,7 +263,7 @@ sizes:
 
 ## AI Features
 
-AI features (translation, tailoring, bio generation) work with multiple LLM providers. Install the one you prefer and set an API key:
+AI-powered features work with multiple LLM providers. Install the one you prefer and set an API key:
 
 **Anthropic Claude:**
 
@@ -290,13 +290,13 @@ export OPENAI_MODEL=llama3                          # optional, defaults to gpt-
 The provider is auto-detected from environment variables (checked in order: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`).
 
 | Feature | Requires AI | Fallback |
-|---------|-------------|----------|
-| Translation (`--lang de`) | Yes | Uses cached translation if available |
+| --- | --- | --- |
+| Translation (`--lang <code>`) | Yes | Uses cached translation if available |
 | Tailoring (`resumake tailor`) | Yes | No fallback — AI required |
+| Cover letter (`resumake cover`) | Yes | No fallback — AI required |
 | Bio (`resumake bio`) | Optional | Deterministic selection from CV data |
-| Cover letter (`resumake cover-letter`) | Yes | No fallback — AI required |
 
-Translation results are cached locally in `output/.cv_de_cache.yaml` — subsequent builds reuse the cache without API calls unless you pass `--retranslate`.
+Translations are cached per language (e.g. `output/.cv_de_cache.yaml`, `output/.cv_fr_cache.yaml`). The cache auto-invalidates when your source `cv.yaml` changes, and incomplete translations are automatically detected and re-triggered.
 
 See [PRIVACY.md](PRIVACY.md) for details on what data is sent and when.
 

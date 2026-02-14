@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - **Schema validation** — Pydantic-based validation with `resumake validate` command
 - **Init command** — `resumake init` scaffolds a new project with example CV and icons
 - **LLM provider abstraction** — pluggable AI backend (Anthropic Claude, OpenAI, and compatible APIs)
-- **Cover letter** — `resumake cover-letter` generates a cover letter for a job description using AI
+- **Cover letter** — `resumake cover` generates a cover letter for a job description using AI
 - **Export** — `resumake export` converts CV to Markdown, HTML, or JSON
 - **Preview** — `resumake preview` generates an HTML preview and opens in the browser
 - **Diff** — `resumake diff` compares two CV YAML files and shows differences

@@ -14,15 +14,17 @@ from .theme import Theme, load_theme
 from .utils import DEFAULT_YAML, OUTPUT_DIR, convert_to_pdf, load_cv, open_file, slugify_name
 
 
-def _generate_cover_letter(cv: dict, description_text: str) -> dict:
+def _generate_cover_letter(cv: dict, description_text: str, lang: str = "en") -> dict:
     """Use an LLM to generate a cover letter matching the CV to a job description."""
     provider = get_provider()
     cv_yaml = yaml.dump(cv, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
+    lang_instruction = f"Write the cover letter in {lang.upper()}. " if lang != "en" else ""
+
     with console.status("Generating cover letter via LLM..."):
         response = provider.complete(
             "You are a professional career consultant. Given a CV in YAML format and a job description, "
-            "write a compelling cover letter.\n\n"
+            f"write a compelling cover letter. {lang_instruction}\n\n"
             "Return ONLY valid YAML with this exact structure — no explanation, no code fences:\n\n"
             "recipient: <company name or 'Hiring Manager'>\n"
             "subject: <subject line for the letter>\n"
@@ -139,7 +141,7 @@ def cover_letter(
         Path,
         typer.Argument(help="Path to a .txt or .md file with the job description."),
     ],
-    lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Default: en.")] = "en",
+    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = "en",
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
@@ -159,7 +161,7 @@ def cover_letter(
         raise typer.Exit(1)
 
     cv = load_cv(source)
-    letter = _generate_cover_letter(cv, description_text)
+    letter = _generate_cover_letter(cv, description_text, lang=lang)
 
     resolved_theme = load_theme(theme)
     output_path = _build_cover_letter_docx(cv, letter, lang, resolved_theme)

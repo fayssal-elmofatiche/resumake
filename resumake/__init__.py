@@ -74,4 +74,4 @@ app.command()(diff)
 
 from .cover_letter import cover_letter
 
-app.command(name="cover-letter")(cover_letter)
+app.command(name="cover")(cover_letter)

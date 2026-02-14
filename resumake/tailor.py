@@ -57,7 +57,7 @@ def tailor(
         Path,
         typer.Argument(help="Path to a .txt or .md file with the project/job description."),
     ],
-    lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Default: en.")] = "en",
+    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = "en",
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
@@ -81,8 +81,8 @@ def tailor(
     tailored_cv = tailor_cv(cv_en, description_text)
 
     # Translate if needed
-    if lang == "de":
-        tailored_cv = translate_cv(tailored_cv, retranslate=True)
+    if lang != "en":
+        tailored_cv = translate_cv(tailored_cv, lang=lang, retranslate=True)
 
     # Build the docx — use a custom output filename
     resolved_theme = load_theme(theme)

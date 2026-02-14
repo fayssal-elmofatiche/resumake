@@ -10,7 +10,7 @@ from docx.oxml.ns import nsdecls, qn
 from docx.shared import Cm, Pt
 
 from .theme import Theme, load_theme
-from .utils import LABELS, OUTPUT_DIR, SECTION_ICONS, parse_start_date, resolve_asset, slugify_name
+from .utils import OUTPUT_DIR, SECTION_ICONS, get_labels, parse_start_date, resolve_asset, slugify_name
 
 # Module-level theme — set by build_docx() before any builder runs
 _theme: Theme = Theme()
@@ -208,7 +208,7 @@ def build_sidebar_header(cell, cv, lang="en"):
 
 
 def build_sidebar_contact(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     add_para(
         cell,
         L["details"],
@@ -252,7 +252,7 @@ def build_sidebar_contact(cell, cv, lang="en"):
 
 
 def build_sidebar_links(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     if not cv.get("links"):
         return
     add_para(
@@ -282,7 +282,7 @@ def build_sidebar_links(cell, cv, lang="en"):
 
 
 def build_sidebar_skills(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     skills = cv.get("skills", {})
     if not skills:
         return
@@ -332,24 +332,21 @@ def build_sidebar_skills(cell, cv, lang="en"):
 
 
 def build_sidebar_languages(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     languages = cv.get("skills", {}).get("languages", [])
     if not languages:
         return
 
-    level_map_en = {
-        "native": "Native",
-        "fluent": "Fluent",
-        "professional": "Professional",
-        "basic": "Basic",
+    level_maps = {
+        "en": {"native": "Native", "fluent": "Fluent", "professional": "Professional", "basic": "Basic"},
+        "de": {
+            "native": "Muttersprache",
+            "fluent": "Fließend",
+            "professional": "Verhandlungssicher",
+            "basic": "Grundkenntnisse",
+        },
     }
-    level_map_de = {
-        "native": "Muttersprache",
-        "fluent": "Fließend",
-        "professional": "Verhandlungssicher",
-        "basic": "Grundkenntnisse",
-    }
-    level_map = level_map_de if lang == "de" else level_map_en
+    level_map = level_maps.get(lang, level_maps["en"])
 
     add_para(
         cell,
@@ -417,7 +414,7 @@ def add_labeled_line(cell, label, value):
 
 
 def build_main_profile(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     add_section_heading(cell, L["profile"], icon_key="Profile")
     add_para(
         cell,
@@ -457,7 +454,7 @@ def build_main_profile(cell, cv, lang="en"):
 
 
 def build_main_experience(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     add_section_heading(cell, L["experience"], icon_key="Project / Employment History")
 
     entries = sorted(cv.get("experience", []), key=lambda e: parse_start_date(e.get("start", "")), reverse=True)
@@ -525,7 +522,7 @@ def build_main_experience(cell, cv, lang="en"):
 
 
 def build_main_education(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     add_section_heading(cell, L["education"], icon_key="Education")
 
     for entry in cv.get("education", []):
@@ -570,7 +567,7 @@ def build_main_education(cell, cv, lang="en"):
 
 
 def build_main_volunteering(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     if not cv.get("volunteering"):
         return
     add_section_heading(cell, L["volunteering"], icon_key="Volunteering")
@@ -607,7 +604,7 @@ def build_main_volunteering(cell, cv, lang="en"):
 
 
 def build_main_references(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     if not cv.get("references"):
         return
     add_section_heading(cell, L["references"], icon_key="References")
@@ -622,7 +619,7 @@ def build_main_references(cell, cv, lang="en"):
 
 
 def build_main_certifications(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     if not cv.get("certifications"):
         return
     add_section_heading(cell, L["certifications"], icon_key="Certifications")
@@ -657,7 +654,7 @@ def build_main_certifications(cell, cv, lang="en"):
 
 
 def build_main_publications(cell, cv, lang="en"):
-    L = LABELS[lang]
+    L = get_labels(lang)
     if not cv.get("publications"):
         return
     add_section_heading(cell, L["publications"], icon_key="Publications")

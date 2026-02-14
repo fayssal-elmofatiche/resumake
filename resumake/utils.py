@@ -15,8 +15,13 @@ BUILTIN_ASSETS_DIR = PACKAGE_DIR / "assets"
 BASE_DIR = Path.cwd()
 DEFAULT_YAML = BASE_DIR / "cv.yaml"
 OUTPUT_DIR = BASE_DIR / "output"
-CACHE_FILE = OUTPUT_DIR / ".cv_de_cache.yaml"
 ASSETS_DIR = BASE_DIR / "assets"
+
+
+def cache_file_for(lang: str) -> Path:
+    """Return the cache file path for a given language."""
+    return OUTPUT_DIR / f".cv_{lang}_cache.yaml"
+
 
 # ── Section icons ──
 SECTION_ICONS = {
@@ -65,6 +70,21 @@ LABELS = {
         "testimonials_heading": "WAS KUNDEN SAGEN:",
     },
 }
+
+
+def get_labels(lang: str) -> dict[str, str]:
+    """Get UI labels for a language, falling back to English for unknown languages."""
+    if lang in LABELS:
+        return LABELS[lang]
+    # For translated CVs, labels are stored in the cache under _labels
+    cache = cache_file_for(lang)
+    if cache.exists():
+        with open(cache, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        if data and "_labels" in data:
+            return data["_labels"]
+    return LABELS["en"]
+
 
 # ── Date parsing for sorting ──
 

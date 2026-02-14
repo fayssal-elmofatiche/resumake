@@ -7,16 +7,16 @@ resumake can optionally use external AI services. This document explains what da
 The following commands send your CV data to an external LLM API (Anthropic Claude, OpenAI, or any OpenAI-compatible provider):
 
 | Command | Data Sent | When |
-|---------|-----------|------|
-| `resumake build` (with `--lang de` or both languages) | Full CV YAML | Only when translating to German (not when using cache) |
+| --- | --- | --- |
+| `resumake build` (with `--lang` other than `en`) | Full CV YAML | Only when translating (not when using cache) |
 | `resumake tailor` | Full CV YAML + job description file | Always |
 | `resumake bio` | Full CV YAML | Only when AI is available |
-| `resumake cover-letter` | Full CV YAML + job description file | Always |
+| `resumake cover` | Full CV YAML + job description file | Always |
 
 ## Commands That Never Send Data
 
 | Command | Notes |
-|---------|-------|
+| --- | --- |
 | `resumake build --lang en` | English-only builds are fully offline |
 | `resumake validate` | Local schema validation only |
 | `resumake init` | Local file scaffolding only |
@@ -29,14 +29,14 @@ The following commands send your CV data to an external LLM API (Anthropic Claud
 ## How to Stay Offline
 
 - Install without AI extras: `uv tool install resumake`
-- Do not set the `ANTHROPIC_API_KEY` environment variable
+- Do not set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
 - Use `--lang en` to skip translation
-- Translation results are cached locally in `output/.cv_de_cache.yaml` — subsequent builds reuse the cache without API calls
+- Translation results are cached locally per language — subsequent builds reuse the cache without API calls
 
 ## Data Storage
 
 - Your CV data stays on your machine (in `cv.yaml` and `output/`)
-- Translation cache is stored locally in `output/.cv_de_cache.yaml`
+- Translation caches are stored locally in `output/.cv_<lang>_cache.yaml`
 - No data is logged, stored, or shared by resumake itself
 - API providers have their own data policies:
   - [Anthropic privacy policy](https://www.anthropic.com/privacy)

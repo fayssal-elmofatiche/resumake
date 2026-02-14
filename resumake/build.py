@@ -32,7 +32,10 @@ def _print_summary(outputs: list[Path]):
 
 
 def build(
-    lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Omit to generate both.")] = None,
+    lang: Annotated[
+        Optional[str],
+        typer.Option(help="Output language code (e.g. en, de, fr, es). Omit to generate EN + DE."),
+    ] = None,
     retranslate: Annotated[
         bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")
     ] = False,
@@ -54,8 +57,8 @@ def build(
         outputs = []
         for target_lang in langs:
             cv = cv_en
-            if target_lang == "de":
-                cv = translate_cv(cv_en, retranslate=retranslate)
+            if target_lang != "en":
+                cv = translate_cv(cv_en, lang=target_lang, retranslate=retranslate)
             output_path = build_docx(cv, target_lang, theme=resolved_theme)
             outputs.append(output_path)
             if pdf:
