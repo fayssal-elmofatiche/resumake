@@ -4,7 +4,7 @@ resumake can optionally use external AI services. This document explains what da
 
 ## Commands That Send Data
 
-The following commands send your CV data to an external LLM API (currently Anthropic Claude):
+The following commands send your CV data to an external LLM API (Anthropic Claude, OpenAI, or any OpenAI-compatible provider):
 
 | Command | Data Sent | When |
 |---------|-----------|------|
@@ -33,4 +33,6 @@ The following commands send your CV data to an external LLM API (currently Anthr
 - Your CV data stays on your machine (in `cv.yaml` and `output/`)
 - Translation cache is stored locally in `output/.cv_de_cache.yaml`
 - No data is logged, stored, or shared by resumake itself
-- API providers have their own data policies — see [Anthropic's privacy policy](https://www.anthropic.com/privacy)
+- API providers have their own data policies:
+  - [Anthropic privacy policy](https://www.anthropic.com/privacy)
+  - [OpenAI privacy policy](https://openai.com/policies/privacy-policy)

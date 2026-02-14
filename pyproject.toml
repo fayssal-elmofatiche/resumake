@@ -32,10 +32,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ai = ["anthropic>=0.40.0"]
+anthropic = ["anthropic>=0.40.0"]
+openai = ["openai>=1.0.0"]
+ai = ["resumake[anthropic]"]
 pdf = ["docx2pdf>=0.1.8"]
 watch = ["watchdog>=4.0.0"]
-all = ["resumake[ai,pdf,watch]"]
+all = ["resumake[anthropic,openai,pdf,watch]"]
 dev = ["pytest>=8.0", "ruff>=0.8.0"]
 
 [project.urls]

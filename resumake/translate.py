@@ -21,7 +21,7 @@ def translate_cv(cv: dict, retranslate: bool = False) -> dict:
             console.print("[yellow]No LLM provider available — falling back to cached translation.[/]")
             return load_cv(CACHE_FILE, validate=False)
         err_console.print("[red]Error:[/] No LLM provider available and no cached translation found.")
-        err_console.print("Set ANTHROPIC_API_KEY or install with: [bold]uv tool install resumake --with anthropic[/]")
+        err_console.print("Set ANTHROPIC_API_KEY or OPENAI_API_KEY to enable AI features.")
         raise SystemExit(1)
 
     cv_yaml = yaml.dump(cv, allow_unicode=True, default_flow_style=False, sort_keys=False)

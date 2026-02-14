@@ -28,23 +28,26 @@ resumake build --lang en
 
 ```bash
 uv tool install resumake                      # Core (YAML -> Word)
-uv tool install resumake --with anthropic     # + AI features
+uv tool install resumake --with anthropic     # + AI (Anthropic Claude)
+uv tool install resumake --with openai        # + AI (OpenAI / compatible)
 uv tool install resumake[all]                 # Everything
 ```
 
 **With pip:**
 
 ```bash
-pip install resumake        # Core
-pip install resumake[ai]    # + AI features
-pip install resumake[all]   # Everything
+pip install resumake              # Core
+pip install resumake[anthropic]   # + Anthropic Claude
+pip install resumake[openai]      # + OpenAI / compatible
+pip install resumake[all]         # Everything
 ```
 
 ### Optional extras
 
 | Extra | Packages | Enables |
 |-------|----------|---------|
-| `ai` | `anthropic` | Translation, tailoring, AI-powered bio |
+| `anthropic` | `anthropic` | AI features via Anthropic Claude |
+| `openai` | `openai` | AI features via OpenAI (or any compatible API) |
 | `pdf` | `docx2pdf` | PDF export via `--pdf` |
 | `watch` | `watchdog` | Auto-rebuild via `--watch` |
 | `all` | All of the above | Everything |
@@ -211,12 +214,31 @@ sizes:
 
 ## AI Features
 
-AI features (translation, tailoring, bio generation) require the `anthropic` package and an API key:
+AI features (translation, tailoring, bio generation) work with multiple LLM providers. Install the one you prefer and set an API key:
+
+**Anthropic Claude:**
 
 ```bash
 uv tool install resumake --with anthropic
 export ANTHROPIC_API_KEY=your-key-here
 ```
+
+**OpenAI:**
+
+```bash
+uv tool install resumake --with openai
+export OPENAI_API_KEY=your-key-here
+```
+
+**OpenAI-compatible APIs** (Ollama, LiteLLM, Azure, etc.):
+
+```bash
+export OPENAI_API_KEY=your-key
+export OPENAI_BASE_URL=http://localhost:11434/v1   # e.g. Ollama
+export OPENAI_MODEL=llama3                          # optional, defaults to gpt-4o
+```
+
+The provider is auto-detected from environment variables (checked in order: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`).
 
 | Feature | Requires AI | Fallback |
 |---------|-------------|----------|

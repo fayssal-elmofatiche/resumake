@@ -397,6 +397,25 @@ wheels = [
 ]
 
 [[package]]
+name = "openai"
+version = "2.21.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "jiter" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "tqdm" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/e5/3d197a0947a166649f566706d7a4c8f7fe38f1fa7b24c9bcffe4c7591d44/openai-2.21.0.tar.gz", hash = "sha256:81b48ce4b8bbb2cc3af02047ceb19561f7b1dc0d4e52d1de7f02abfd15aa59b7", size = 644374, upload-time = "2026-02-14T00:12:01.577Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/56/0a89092a453bb2c676d66abee44f863e742b2110d4dbb1dbcca3f7e5fc33/openai-2.21.0-py3-none-any.whl", hash = "sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c", size = 1103065, upload-time = "2026-02-14T00:11:59.603Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "26.0"
 source = { registry = "https://pypi.org/simple" }
@@ -657,11 +676,18 @@ ai = [
 all = [
     { name = "anthropic" },
     { name = "docx2pdf" },
+    { name = "openai" },
     { name = "watchdog" },
+]
+anthropic = [
+    { name = "anthropic" },
 ]
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+]
+openai = [
+    { name = "openai" },
 ]
 pdf = [
     { name = "docx2pdf" },
@@ -672,19 +698,21 @@ watch = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", marker = "extra == 'ai'", specifier = ">=0.40.0" },
+    { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.40.0" },
     { name = "docx2pdf", marker = "extra == 'pdf'", specifier = ">=0.1.8" },
+    { name = "openai", marker = "extra == 'openai'", specifier = ">=1.0.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "resumake", extras = ["ai", "pdf", "watch"], marker = "extra == 'all'" },
+    { name = "resumake", extras = ["anthropic"], marker = "extra == 'ai'" },
+    { name = "resumake", extras = ["anthropic", "openai", "pdf", "watch"], marker = "extra == 'all'" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "typer", specifier = ">=0.15.0" },
     { name = "watchdog", marker = "extra == 'watch'", specifier = ">=4.0.0" },
 ]
-provides-extras = ["ai", "pdf", "watch", "all", "dev"]
+provides-extras = ["anthropic", "openai", "ai", "pdf", "watch", "all", "dev"]
 
 [[package]]
 name = "rich"
