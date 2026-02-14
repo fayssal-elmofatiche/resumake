@@ -79,6 +79,7 @@ Build CV documents from YAML source.
 resumake build                        # English + German (default)
 resumake build --lang en              # English only
 resumake build --lang fr              # French (any language code works)
+resumake build --lang en,fr,de        # Multiple languages at once
 resumake build --theme minimal        # Use a different theme
 resumake build --pdf                  # Also generate PDF
 resumake build --no-open              # Don't auto-open the files

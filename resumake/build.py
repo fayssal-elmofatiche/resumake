@@ -34,7 +34,7 @@ def _print_summary(outputs: list[Path]):
 def build(
     lang: Annotated[
         Optional[str],
-        typer.Option(help="Output language code (e.g. en, de, fr, es). Omit to generate EN + DE."),
+        typer.Option(help="Comma-separated language codes (e.g. en, de, en,fr,de). Omit to generate EN + DE."),
     ] = None,
     retranslate: Annotated[
         bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")
@@ -49,7 +49,7 @@ def build(
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated files.")] = True,
 ):
     """Build full CV documents from YAML source."""
-    langs = [lang] if lang else ["en", "de"]
+    langs = [code.strip() for code in lang.split(",")] if lang else ["en", "de"]
     resolved_theme = load_theme(theme)
 
     def do_build():

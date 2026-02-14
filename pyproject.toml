@@ -53,7 +53,7 @@ resumake = "resumake:app"
 packages = ["resumake"]
 
 [tool.setuptools.package-data]
-resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml"]
+resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml", "py.typed"]
 
 [tool.ruff]
 target-version = "py311"
