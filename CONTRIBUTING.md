@@ -7,22 +7,20 @@ Thanks for your interest in contributing!
 ```bash
 git clone https://github.com/fayssal-elmofatiche/resumake.git
 cd resumake
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[all,dev]"
+uv sync --all-extras
 ```
 
 ## Running Tests
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ## Linting
 
 ```bash
-ruff check .
-ruff format --check .
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 ## Adding a Theme

@@ -20,7 +20,7 @@ Build styled CV documents from a single YAML source.
 
 ```bash
 # Install
-pip install resumake
+uv tool install resumake
 
 # Scaffold a new project
 resumake init my-cv
@@ -34,19 +34,21 @@ resumake build
 
 ```bash
 # Core (YAML → Word)
-pip install resumake
+uv tool install resumake
 
 # With AI features (translation, tailoring, bio generation)
-pip install resumake[ai]
+uv tool install resumake --with anthropic
 
-# With PDF export
-pip install resumake[pdf]
+# With everything
+uv tool install resumake[all]
+```
 
-# With file watching
-pip install resumake[watch]
+Or with pip:
 
-# Everything
-pip install resumake[all]
+```bash
+pip install resumake        # Core
+pip install resumake[ai]    # + AI features
+pip install resumake[all]   # Everything
 ```
 
 ## Commands
@@ -188,7 +190,7 @@ sizes:
 AI features (translation, tailoring, bio generation) require the `anthropic` package and an API key:
 
 ```bash
-pip install resumake[ai]
+uv tool install resumake --with anthropic
 export ANTHROPIC_API_KEY=your-key-here
 ```
 
