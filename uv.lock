@@ -658,7 +658,7 @@ wheels = [
 ]
 
 [[package]]
-name = "resumake"
+name = "resumakeai"
 version = "0.4.0"
 source = { editable = "." }
 dependencies = [
@@ -705,8 +705,8 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "resumake", extras = ["anthropic"], marker = "extra == 'ai'" },
-    { name = "resumake", extras = ["anthropic", "openai", "pdf", "watch"], marker = "extra == 'all'" },
+    { name = "resumakeai", extras = ["anthropic"], marker = "extra == 'ai'" },
+    { name = "resumakeai", extras = ["anthropic", "openai", "pdf", "watch"], marker = "extra == 'all'" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "typer", specifier = ">=0.15.0" },

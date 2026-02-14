@@ -8,6 +8,10 @@ Build styled CV documents from a single YAML source.
 
 **resumake** turns a `cv.yaml` file into polished Word (.docx) documents with a two-column layout, photo, icons, and consistent theming. Translate to any language, tailor for a specific job, generate a cover letter, or export to Markdown/HTML/JSON — all from the command line.
 
+<p align="center">
+  <img src="demo.gif" alt="resumake demo" width="800">
+</p>
+
 ## Quickstart
 
 ```bash

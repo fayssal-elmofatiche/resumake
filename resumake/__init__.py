@@ -8,7 +8,7 @@ import typer
 
 def _version_callback(value: bool):
     if value:
-        print(f"resumake {_get_version('resumake')}")
+        print(f"resumake {_get_version('resumakeai')}")
         raise typer.Exit()
 
 
