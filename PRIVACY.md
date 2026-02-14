@@ -11,6 +11,7 @@ The following commands send your CV data to an external LLM API (Anthropic Claud
 | `resumake build` (with `--lang de` or both languages) | Full CV YAML | Only when translating to German (not when using cache) |
 | `resumake tailor` | Full CV YAML + job description file | Always |
 | `resumake bio` | Full CV YAML | Only when AI is available |
+| `resumake cover-letter` | Full CV YAML + job description file | Always |
 
 ## Commands That Never Send Data
 
@@ -20,6 +21,10 @@ The following commands send your CV data to an external LLM API (Anthropic Claud
 | `resumake validate` | Local schema validation only |
 | `resumake init` | Local file scaffolding only |
 | `resumake bio` (without AI) | Falls back to deterministic selection |
+| `resumake export` | Local format conversion only |
+| `resumake preview` | Local HTML generation only |
+| `resumake diff` | Local YAML comparison only |
+| `resumake themes` | Lists built-in themes only |
 
 ## How to Stay Offline
 

@@ -55,3 +55,23 @@ app.command()(validate)
 from .init_cmd import init
 
 app.command()(init)
+
+from .themes_cmd import themes
+
+app.command()(themes)
+
+from .export_cmd import export
+
+app.command()(export)
+
+from .preview_cmd import preview
+
+app.command()(preview)
+
+from .diff_cmd import diff
+
+app.command()(diff)
+
+from .cover_letter import cover_letter
+
+app.command(name="cover-letter")(cover_letter)

@@ -60,6 +60,10 @@ pip install resumake[all]         # Everything
 - **Multilingual** — generate English and German versions (AI-powered translation with local cache)
 - **Tailor** — reorder and emphasize experience for a specific job description
 - **Bio** — generate a condensed one-pager bio document
+- **Cover letter** — AI-generated cover letter matched to a job description
+- **Export** — convert your CV to Markdown, HTML, or JSON
+- **Preview** — instant HTML preview in your browser
+- **Diff** — compare two CV YAML files side by side
 - **Validate** — check your YAML against the schema before building
 - **Watch mode** — auto-rebuild on file changes
 - **PDF export** — convert generated documents to PDF
@@ -115,6 +119,51 @@ Scaffold a new resumake project with an example CV and icons.
 ```bash
 resumake init                         # In current directory
 resumake init my-cv                   # In a new directory
+```
+
+### `resumake export`
+
+Export your CV to Markdown, HTML, or JSON.
+
+```bash
+resumake export md                    # Markdown
+resumake export html                  # Self-contained HTML page
+resumake export json                  # Raw JSON
+resumake export md -o resume.md       # Custom output path
+```
+
+### `resumake preview`
+
+Generate an HTML preview and open it in your browser.
+
+```bash
+resumake preview
+resumake preview --source path/to/cv.yaml
+```
+
+### `resumake diff`
+
+Compare two CV YAML files and show what changed.
+
+```bash
+resumake diff cv.yaml cv_tailored.yaml
+```
+
+### `resumake cover-letter`
+
+Generate a cover letter matching your CV to a job description. Requires AI.
+
+```bash
+resumake cover-letter job-description.txt
+resumake cover-letter job-description.txt --pdf --theme modern
+```
+
+### `resumake themes`
+
+List available built-in themes with color previews.
+
+```bash
+resumake themes
 ```
 
 ### Global options
@@ -245,6 +294,7 @@ The provider is auto-detected from environment variables (checked in order: `ANT
 | Translation (`--lang de`) | Yes | Uses cached translation if available |
 | Tailoring (`resumake tailor`) | Yes | No fallback — AI required |
 | Bio (`resumake bio`) | Optional | Deterministic selection from CV data |
+| Cover letter (`resumake cover-letter`) | Yes | No fallback — AI required |
 
 Translation results are cached locally in `output/.cv_de_cache.yaml` — subsequent builds reuse the cache without API calls unless you pass `--retranslate`.
 

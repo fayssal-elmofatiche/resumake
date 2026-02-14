@@ -2,14 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.3.0] - 2025-02-13
+## [0.4.0] - 2025-02-13
 
 ### Added
 
 - **Theme system** — built-in themes (classic, minimal, modern) and custom theme support via YAML
 - **Schema validation** — Pydantic-based validation with `resumake validate` command
 - **Init command** — `resumake init` scaffolds a new project with example CV and icons
-- **LLM provider abstraction** — pluggable AI backend (currently Anthropic Claude)
+- **LLM provider abstraction** — pluggable AI backend (Anthropic Claude, OpenAI, and compatible APIs)
+- **Cover letter** — `resumake cover-letter` generates a cover letter for a job description using AI
+- **Export** — `resumake export` converts CV to Markdown, HTML, or JSON
+- **Preview** — `resumake preview` generates an HTML preview and opens in the browser
+- **Diff** — `resumake diff` compares two CV YAML files and shows differences
+- **Themes listing** — `resumake themes` lists built-in themes with color previews
 - **Rich CLI output** — styled console output, spinners for API calls, summary tables
 - **Clickable links** — hyperlinks in generated Word documents are now clickable
 - **`--version` flag** — `resumake --version` / `resumake -V`
