@@ -1,0 +1,23 @@
+name: classic
+colors:
+  primary: "0F141F"
+  accent: "0AA8A7"
+  text_light: "FFFFFF"
+  text_muted: "7A8599"
+  text_body: "333333"
+fonts:
+  heading: "Arial Narrow"
+  body: "Calibri"
+layout:
+  sidebar_width_cm: 5.3
+  main_width_cm: 12.7
+  page_top_margin_cm: 1.1
+  page_bottom_margin_cm: 1.1
+  page_left_margin_cm: 1.4
+  page_right_margin_cm: 1.4
+sizes:
+  name_pt: 13
+  heading_pt: 12
+  subheading_pt: 10
+  body_pt: 9
+  small_pt: 8

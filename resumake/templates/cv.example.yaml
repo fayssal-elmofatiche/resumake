@@ -1,0 +1,135 @@
+# resumake — Example CV
+# Edit this file with your own information, then run: resumake build
+
+name: "Jane Doe"
+title: "Senior Software Engineer"
+photo: "profile.jpeg"   # Place in assets/ folder (optional)
+
+contact:
+  address: "Berlin, Germany"
+  phone: "+49 123 456 7890"
+  email: "jane.doe@example.com"
+  nationality: "German"
+
+links:
+  - label: "LinkedIn"
+    url: "https://linkedin.com/in/janedoe"
+  - label: "GitHub"
+    url: "https://github.com/janedoe"
+
+skills:
+  leadership:
+    - "Team Leadership"
+    - "Agile Coaching"
+    - "Stakeholder Management"
+    - "Mentoring"
+  technical:
+    - "Python"
+    - "TypeScript"
+    - "React"
+    - "Node.js"
+    - "PostgreSQL"
+    - "Docker"
+    - "AWS"
+    - "CI/CD"
+  languages:
+    - name: "German"
+      level: "native"
+    - name: "English"
+      level: "fluent"
+    - name: "French"
+      level: "basic"
+
+profile: >
+  Senior Software Engineer with 8+ years of experience designing and building
+  scalable web applications. Passionate about clean architecture, developer
+  experience, and mentoring junior engineers. Proven track record of delivering
+  complex projects on time in cross-functional, distributed teams.
+
+testimonials:
+  - name: "John Smith"
+    role: "CTO"
+    org: "TechCorp GmbH"
+    quote: "Jane is one of the most talented engineers I've worked with. She combines deep technical skills with excellent communication."
+
+experience:
+  - title: "Senior Software Engineer"
+    org: "TechCorp GmbH"
+    start: "March 2021"
+    end: "Present"
+    description: "Leading backend development for a SaaS platform serving 500k+ users."
+    bullets:
+      - "Architected a microservices migration reducing deployment time by 60%"
+      - "Led a team of 5 engineers through a major platform rewrite"
+      - "Implemented CI/CD pipeline cutting release cycles from 2 weeks to 2 days"
+    tech_stack:
+      - "Python"
+      - "FastAPI"
+      - "PostgreSQL"
+      - "Redis"
+      - "Docker"
+      - "Kubernetes"
+    project_methodology: "Scrum / Kanban"
+
+  - title: "Software Engineer"
+    org: "StartupXYZ"
+    start: "June 2018"
+    end: "February 2021"
+    description: "Full-stack development for an e-commerce platform."
+    bullets:
+      - "Built a real-time inventory management system handling 10k+ SKUs"
+      - "Reduced page load times by 40% through frontend optimization"
+      - "Designed and implemented a REST API serving 1M+ requests/day"
+    tech_stack:
+      - "TypeScript"
+      - "React"
+      - "Node.js"
+      - "MongoDB"
+
+  - title: "Junior Developer"
+    org: "WebAgency"
+    start: "September 2016"
+    end: "May 2018"
+    description: "Frontend development for client websites and web applications."
+    bullets:
+      - "Developed responsive web applications for 20+ client projects"
+      - "Introduced automated testing, improving code quality by 30%"
+
+education:
+  - degree: "M.Sc. Computer Science"
+    institution: "Technical University of Berlin"
+    start: "2014"
+    end: "2016"
+    description: "Focus on distributed systems and software engineering."
+    details: "Thesis: 'Scalable Event-Driven Architectures for Real-Time Applications'"
+
+  - degree: "B.Sc. Computer Science"
+    institution: "University of Hamburg"
+    start: "2011"
+    end: "2014"
+
+volunteering:
+  - title: "Coding Mentor"
+    org: "Code for All"
+    start: "January 2020"
+    end: "Present"
+    description: "Mentoring underrepresented groups in tech through weekly coding sessions."
+
+certifications:
+  - name: "AWS Solutions Architect Associate"
+    org: "Amazon Web Services"
+    start: "2022"
+    end: "2025"
+    description: "Cloud architecture and best practices certification."
+
+  - name: "Professional Scrum Master I"
+    org: "Scrum.org"
+    start: "2021"
+    end: "Present"
+
+publications:
+  - title: "Event-Driven Microservices at Scale"
+    year: 2023
+    venue: "EuroPython Conference"
+
+references: "Available upon request."

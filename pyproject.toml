@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resumake"
+version = "0.3.0"
+description = "Build styled CV documents from a single YAML source."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Fayssal El Mofatiche" }]
+keywords = ["cv", "resume", "docx", "yaml", "cli", "word", "document"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business",
+    "Topic :: Text Processing :: Markup",
+    "Typing :: Typed",
+]
+dependencies = [
+    "python-docx>=1.1.0",
+    "pyyaml>=6.0",
+    "typer>=0.15.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic>=0.40.0"]
+pdf = ["docx2pdf>=0.1.8"]
+watch = ["watchdog>=4.0.0"]
+all = ["resumake[ai,pdf,watch]"]
+dev = ["pytest>=8.0", "ruff>=0.8.0"]
+
+[project.urls]
+Homepage = "https://github.com/fayssal-elmofatiche/resumake"
+Repository = "https://github.com/fayssal-elmofatiche/resumake"
+Issues = "https://github.com/fayssal-elmofatiche/resumake/issues"
+
+[project.scripts]
+resumake = "resumake:app"
+
+[tool.setuptools]
+packages = ["resumake"]
+
+[tool.setuptools.package-data]
+resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

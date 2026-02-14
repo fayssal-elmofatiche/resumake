@@ -1,0 +1,105 @@
+"""Build command — generate full CV documents from YAML source."""
+
+import time
+from pathlib import Path
+from typing import Annotated, Optional
+
+import typer
+from rich.table import Table
+
+from .console import console, err_console
+from .utils import DEFAULT_YAML, load_cv, open_file, convert_to_pdf
+from .translate import translate_cv
+from .docx_builder import build_docx
+from .theme import load_theme
+
+
+def _print_summary(outputs: list[Path]):
+    """Print a Rich summary table of generated files."""
+    table = Table(title="Generated Files", show_lines=False)
+    table.add_column("File", style="cyan")
+    table.add_column("Size", justify="right", style="green")
+    for p in outputs:
+        size = p.stat().st_size
+        if size > 1024 * 1024:
+            size_str = f"{size / (1024 * 1024):.1f} MB"
+        elif size > 1024:
+            size_str = f"{size / 1024:.1f} KB"
+        else:
+            size_str = f"{size} B"
+        table.add_row(p.name, size_str)
+    console.print(table)
+
+
+def build(
+    lang: Annotated[Optional[str], typer.Option(help="Output language (en or de). Omit to generate both.")] = None,
+    retranslate: Annotated[bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")] = False,
+    source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
+    pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF from the Word documents.")] = False,
+    watch: Annotated[bool, typer.Option("--watch", help="Watch the source YAML for changes and auto-rebuild.")] = False,
+    theme: Annotated[Optional[str], typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml.")] = None,
+):
+    """Build full CV documents from YAML source."""
+    langs = [lang] if lang else ["en", "de"]
+    resolved_theme = load_theme(theme)
+
+    def do_build():
+        cv_en = load_cv(source)
+        outputs = []
+        for l in langs:
+            cv = cv_en
+            if l == "de":
+                cv = translate_cv(cv_en, retranslate=retranslate)
+            output_path = build_docx(cv, l, theme=resolved_theme)
+            outputs.append(output_path)
+            if pdf:
+                pdf_path = convert_to_pdf(output_path)
+                outputs.append(pdf_path)
+        return outputs
+
+    # Initial build
+    outputs = do_build()
+    _print_summary(outputs)
+    for output_path in outputs:
+        open_file(output_path)
+
+    if watch:
+        try:
+            from watchdog.observers import Observer
+            from watchdog.events import FileSystemEventHandler
+        except ImportError:
+            err_console.print("[red]Error:[/] 'watchdog' package required for --watch.")
+            err_console.print("Install with: [bold]pip install resumake\\[watch][/]")
+            raise typer.Exit(1)
+
+        class RebuildHandler(FileSystemEventHandler):
+            def __init__(self):
+                self._last_build = 0
+
+            def on_modified(self, event):
+                if event.is_directory:
+                    return
+                if Path(event.src_path).resolve() != source.resolve():
+                    return
+                now = time.time()
+                if now - self._last_build < 1:
+                    return
+                self._last_build = now
+                console.print(f"\n[dim]--- {source.name} changed, rebuilding... ---[/]")
+                try:
+                    outs = do_build()
+                    _print_summary(outs)
+                except Exception as e:
+                    err_console.print(f"[red]Build error:[/] {e}")
+
+        observer = Observer()
+        observer.schedule(RebuildHandler(), str(source.parent), recursive=False)
+        observer.start()
+        console.print(f"\nWatching [cyan]{source}[/] for changes. Press Ctrl+C to stop.")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+            console.print("\n[dim]Stopped watching.[/]")
+        observer.join()
