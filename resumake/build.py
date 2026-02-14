@@ -79,7 +79,7 @@ def build(
             from watchdog.observers import Observer
         except ImportError:
             err_console.print("[red]Error:[/] 'watchdog' package required for --watch.")
-            err_console.print("Install with: [bold]uv tool install resumake --with watchdog[/]")
+            err_console.print("Install with: [bold]uv tool install resumakeai --with watchdog[/]")
             raise typer.Exit(1)
 
         class RebuildHandler(FileSystemEventHandler):

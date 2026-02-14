@@ -28,7 +28,7 @@ The following commands send your CV data to an external LLM API (Anthropic Claud
 
 ## How to Stay Offline
 
-- Install without AI extras: `uv tool install resumake`
+- Install without AI extras: `uv tool install resumakeai`
 - Do not set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
 - Use `--lang en` to skip translation
 - Translation results are cached locally per language — subsequent builds reuse the cache without API calls

@@ -76,7 +76,7 @@ def get_provider() -> LLMProvider:
         except ImportError:
             raise RuntimeError(
                 "ANTHROPIC_API_KEY is set but 'anthropic' package is not installed.\n"
-                "Install with: uv tool install resumake --with anthropic"
+                "Install with: uv tool install resumakeai --with anthropic"
             )
 
     openai_key = os.environ.get("OPENAI_API_KEY")
@@ -88,11 +88,11 @@ def get_provider() -> LLMProvider:
         except ImportError:
             raise RuntimeError(
                 "OPENAI_API_KEY is set but 'openai' package is not installed.\n"
-                "Install with: uv tool install resumake --with openai"
+                "Install with: uv tool install resumakeai --with openai"
             )
 
     raise RuntimeError(
         "No LLM provider configured.\n"
         "Set one of: ANTHROPIC_API_KEY, OPENAI_API_KEY\n"
-        "Install with: uv tool install resumake --with anthropic  (or --with openai)"
+        "Install with: uv tool install resumakeai --with anthropic  (or --with openai)"
     )

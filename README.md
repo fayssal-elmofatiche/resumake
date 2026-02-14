@@ -12,7 +12,7 @@ Build styled CV documents from a single YAML source.
 
 ```bash
 # Install
-uv tool install resumake
+uv tool install resumakeai
 
 # Scaffold a new project
 resumake init my-cv
@@ -27,19 +27,19 @@ resumake build --lang en
 **With [uv](https://docs.astral.sh/uv/) (recommended):**
 
 ```bash
-uv tool install resumake                      # Core (YAML -> Word)
-uv tool install resumake --with anthropic     # + AI (Anthropic Claude)
-uv tool install resumake --with openai        # + AI (OpenAI / compatible)
-uv tool install resumake[all]                 # Everything
+uv tool install resumakeai                      # Core (YAML -> Word)
+uv tool install resumakeai --with anthropic     # + AI (Anthropic Claude)
+uv tool install resumakeai --with openai        # + AI (OpenAI / compatible)
+uv tool install "resumakeai[all]"               # Everything
 ```
 
 **With pip:**
 
 ```bash
-pip install resumake              # Core
-pip install resumake[anthropic]   # + Anthropic Claude
-pip install resumake[openai]      # + OpenAI / compatible
-pip install resumake[all]         # Everything
+pip install resumakeai              # Core
+pip install "resumakeai[anthropic]" # + Anthropic Claude
+pip install "resumakeai[openai]"    # + OpenAI / compatible
+pip install "resumakeai[all]"       # Everything
 ```
 
 ### Optional extras
@@ -269,14 +269,14 @@ AI-powered features work with multiple LLM providers. Install the one you prefer
 **Anthropic Claude:**
 
 ```bash
-uv tool install resumake --with anthropic
+uv tool install resumakeai --with anthropic
 export ANTHROPIC_API_KEY=your-key-here
 ```
 
 **OpenAI:**
 
 ```bash
-uv tool install resumake --with openai
+uv tool install resumakeai --with openai
 export OPENAI_API_KEY=your-key-here
 ```
 

@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "resumake"
+name = "resumakeai"
 version = "0.4.0"
 description = "Build styled CV documents from a single YAML source."
 readme = "README.md"
@@ -34,10 +34,10 @@ dependencies = [
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.40.0"]
 openai = ["openai>=1.0.0"]
-ai = ["resumake[anthropic]"]
+ai = ["resumakeai[anthropic]"]
 pdf = ["docx2pdf>=0.1.8"]
 watch = ["watchdog>=4.0.0"]
-all = ["resumake[anthropic,openai,pdf,watch]"]
+all = ["resumakeai[anthropic,openai,pdf,watch]"]
 dev = ["pytest>=8.0", "ruff>=0.8.0"]
 
 [project.urls]
@@ -49,8 +49,8 @@ Changelog = "https://github.com/fayssal-elmofatiche/resumake/blob/main/CHANGELOG
 [project.scripts]
 resumake = "resumake:app"
 
-[tool.setuptools]
-packages = ["resumake"]
+[tool.setuptools.packages.find]
+include = ["resumake"]
 
 [tool.setuptools.package-data]
 resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml", "py.typed"]

@@ -167,7 +167,7 @@ def convert_to_pdf(docx_path: Path) -> Path:
         from .console import err_console
 
         err_console.print("[red]Error:[/] 'docx2pdf' package required for PDF generation.")
-        err_console.print("Install with: [bold]uv tool install resumake --with docx2pdf[/]")
+        err_console.print("Install with: [bold]uv tool install resumakeai --with docx2pdf[/]")
         raise SystemExit(1)
     pdf_path = docx_path.with_suffix(".pdf")
     convert(str(docx_path), str(pdf_path))
