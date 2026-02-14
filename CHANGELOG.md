@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-02-14
+
+### Added
+
+- **Config file** — `.resumakerc.yaml` for persistent build defaults (lang, theme, pdf, open, source, watch). Supports project-level and user-level configs with CLI overrides.
+- **ATS plain-text export** — `resumake export txt` generates applicant tracking system-friendly plain text with ALL CAPS section headers and no formatting.
+- **Photo validation** — `resumake validate` and `resumake build` now warn about missing, unsupported, or oversized photo files referenced in cv.yaml.
+
 ## [0.4.0] - 2026-02-13
 
 ### Added

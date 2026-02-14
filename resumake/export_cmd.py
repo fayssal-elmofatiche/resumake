@@ -1,4 +1,4 @@
-"""Export command — convert CV to Markdown, HTML, or JSON."""
+"""Export command — convert CV to Markdown, HTML, JSON, or plain text."""
 
 import json
 from pathlib import Path
@@ -152,8 +152,146 @@ def _cv_to_html(cv: dict) -> str:
 </html>"""
 
 
+def _cv_to_plaintext(cv: dict) -> str:
+    """Convert CV dict to ATS-friendly plain text."""
+    lines = []
+
+    lines.append(cv["name"].upper())
+    lines.append(cv["title"])
+    lines.append("")
+
+    contact = cv.get("contact", {})
+    contact_parts = []
+    if contact.get("email"):
+        contact_parts.append(contact["email"])
+    if contact.get("phone"):
+        contact_parts.append(contact["phone"])
+    if contact.get("address"):
+        contact_parts.append(contact["address"])
+    if contact_parts:
+        lines.append(" | ".join(contact_parts))
+        lines.append("")
+
+    links = cv.get("links", [])
+    if links:
+        for lk in links:
+            lines.append(f"{lk['label']}: {lk['url']}")
+        lines.append("")
+
+    if cv.get("profile"):
+        lines.append("=" * 60)
+        lines.append("PROFILE")
+        lines.append("=" * 60)
+        lines.append("")
+        lines.append(cv["profile"].strip())
+        lines.append("")
+
+    skills = cv.get("skills", {})
+    if skills:
+        lines.append("=" * 60)
+        lines.append("SKILLS")
+        lines.append("=" * 60)
+        lines.append("")
+        if skills.get("leadership"):
+            lines.append(f"Leadership: {', '.join(skills['leadership'])}")
+        if skills.get("technical"):
+            lines.append(f"Technical: {', '.join(skills['technical'])}")
+        if skills.get("languages"):
+            lang_strs = [f"{lg['name']} ({lg['level']})" for lg in skills["languages"]]
+            lines.append(f"Languages: {', '.join(lang_strs)}")
+        lines.append("")
+
+    if cv.get("experience"):
+        lines.append("=" * 60)
+        lines.append("EXPERIENCE")
+        lines.append("=" * 60)
+        lines.append("")
+        for exp in cv["experience"]:
+            org_part = f" -- {exp['org']}" if exp.get("org") else ""
+            lines.append(f"{exp['title']}{org_part}")
+            dates = []
+            if exp.get("start"):
+                dates.append(exp["start"])
+            if exp.get("end"):
+                dates.append(exp["end"])
+            if dates:
+                lines.append(" -- ".join(dates))
+            if exp.get("description"):
+                lines.append(exp["description"])
+            for bullet in exp.get("bullets", []):
+                lines.append(f"  - {bullet}")
+            lines.append("")
+
+    if cv.get("education"):
+        lines.append("=" * 60)
+        lines.append("EDUCATION")
+        lines.append("=" * 60)
+        lines.append("")
+        for edu in cv["education"]:
+            lines.append(f"{edu['degree']}, {edu['institution']}")
+            dates = []
+            if edu.get("start"):
+                dates.append(edu["start"])
+            if edu.get("end"):
+                dates.append(edu["end"])
+            if dates:
+                lines.append(" -- ".join(dates))
+            if edu.get("description"):
+                lines.append(edu["description"])
+            lines.append("")
+
+    if cv.get("certifications"):
+        lines.append("=" * 60)
+        lines.append("CERTIFICATIONS")
+        lines.append("=" * 60)
+        lines.append("")
+        for cert in cv["certifications"]:
+            org_part = f", {cert['org']}" if cert.get("org") else ""
+            dates = f" ({cert['start']} -- {cert['end']})" if cert.get("start") else ""
+            lines.append(f"{cert['name']}{org_part}{dates}")
+        lines.append("")
+
+    if cv.get("publications"):
+        lines.append("=" * 60)
+        lines.append("PUBLICATIONS")
+        lines.append("=" * 60)
+        lines.append("")
+        for pub in cv["publications"]:
+            lines.append(f"{pub['title']} -- {pub['venue']}, {pub['year']}")
+        lines.append("")
+
+    if cv.get("volunteering"):
+        lines.append("=" * 60)
+        lines.append("VOLUNTEERING")
+        lines.append("=" * 60)
+        lines.append("")
+        for vol in cv["volunteering"]:
+            org_part = f" -- {vol['org']}" if vol.get("org") else ""
+            lines.append(f"{vol['title']}{org_part}")
+            dates = []
+            if vol.get("start"):
+                dates.append(vol["start"])
+            if vol.get("end"):
+                dates.append(vol["end"])
+            if dates:
+                lines.append(" -- ".join(dates))
+            if vol.get("description"):
+                lines.append(vol["description"])
+            lines.append("")
+
+    if cv.get("references"):
+        lines.append("=" * 60)
+        lines.append("REFERENCES")
+        lines.append("=" * 60)
+        lines.append("")
+        lines.append(cv["references"])
+        lines.append("")
+
+    return "\n".join(lines)
+
+
 def export(
-    format: Annotated[str, typer.Argument(help="Output format: md, html, or json.")],
+    format: Annotated[str, typer.Argument(help="Output format: md, html, json, or txt.")],
     source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
     output: Annotated[
         Optional[Path], typer.Option("--output", "-o", help="Output file path. Defaults to output/<name>_CV.<ext>.")
@@ -162,8 +300,8 @@ def export(
 ):
     """Export CV to Markdown, HTML, or JSON format."""
     format = format.lower().lstrip(".")
-    if format not in ("md", "markdown", "html", "json"):
-        console.print(f"[red]Error:[/] Unknown format '{format}'. Use: md, html, or json.")
+    if format not in ("md", "markdown", "html", "json", "txt", "text"):
+        console.print(f"[red]Error:[/] Unknown format '{format}'. Use: md, html, json, or txt.")
         raise typer.Exit(1)
 
     cv = load_cv(source)
@@ -175,6 +313,9 @@ def export(
     elif format == "html":
         content = _cv_to_html(cv)
         ext = "html"
+    elif format in ("txt", "text"):
+        content = _cv_to_plaintext(cv)
+        ext = "txt"
     else:
         content = json.dumps(cv, indent=2, ensure_ascii=False)
         ext = "json"

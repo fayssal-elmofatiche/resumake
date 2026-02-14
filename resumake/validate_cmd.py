@@ -23,6 +23,14 @@ def validate(
     try:
         validate_cv(data)
         console.print(f"[green]Valid:[/] {source}")
+
+        # Photo validation (warnings only)
+        from .utils import validate_photo
+
+        photo_ref = data.get("photo")
+        if photo_ref:
+            for w in validate_photo(photo_ref):
+                console.print(f"  [yellow]Warning:[/] {w}")
     except Exception as e:
         err_console.print(f"[red]Validation errors in {source}:[/]\n")
         from pydantic import ValidationError

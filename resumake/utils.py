@@ -189,3 +189,34 @@ def resolve_asset(filename: str) -> Path | None:
     if builtin_path.exists():
         return builtin_path
     return None
+
+
+SUPPORTED_IMAGE_FORMATS = {".png", ".jpg", ".jpeg", ".gif", ".tiff", ".tif"}
+MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+def validate_photo(photo_ref: str | None) -> list[str]:
+    """Validate a photo reference from cv.yaml. Returns a list of warning strings (empty = OK)."""
+    if not photo_ref or not photo_ref.strip():
+        return []
+
+    warnings = []
+    path = resolve_asset(photo_ref)
+
+    if path is None:
+        warnings.append(f"Photo '{photo_ref}' not found. Place it in assets/ or check the filename in cv.yaml.")
+        return warnings
+
+    suffix = path.suffix.lower()
+    if suffix not in SUPPORTED_IMAGE_FORMATS:
+        warnings.append(
+            f"Photo '{photo_ref}' has unsupported format '{suffix}'. "
+            f"Supported: {', '.join(sorted(SUPPORTED_IMAGE_FORMATS))}"
+        )
+
+    size = path.stat().st_size
+    if size > MAX_PHOTO_SIZE_BYTES:
+        size_mb = size / (1024 * 1024)
+        warnings.append(f"Photo '{photo_ref}' is {size_mb:.1f} MB. Consider compressing it (recommended < 5 MB).")
+
+    return warnings

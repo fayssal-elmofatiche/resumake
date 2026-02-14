@@ -7,6 +7,7 @@ from typing import Annotated, Optional
 import typer
 from rich.table import Table
 
+from .config import load_config, resolve
 from .console import console, err_console
 from .docx_builder import build_docx
 from .theme import load_theme
@@ -39,16 +40,28 @@ def build(
     retranslate: Annotated[
         bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")
     ] = False,
-    source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
-    pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF from the Word documents.")] = False,
-    watch: Annotated[bool, typer.Option("--watch", help="Watch the source YAML for changes and auto-rebuild.")] = False,
+    source: Annotated[Optional[Path], typer.Option(help="Path to source YAML.")] = None,
+    pdf: Annotated[
+        Optional[bool], typer.Option("--pdf/--no-pdf", help="Also generate PDF from the Word documents.")
+    ] = None,
+    watch: Annotated[
+        Optional[bool], typer.Option("--watch/--no-watch", help="Watch source YAML for changes and auto-rebuild.")
+    ] = None,
     theme: Annotated[
         Optional[str],
         typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
     ] = None,
-    open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated files.")] = True,
+    open: Annotated[Optional[bool], typer.Option("--open/--no-open", help="Open the generated files.")] = None,
 ):
     """Build full CV documents from YAML source."""
+    cfg = load_config()
+    lang = resolve(lang, cfg.lang, None)
+    source = Path(resolve(source, cfg.source, str(DEFAULT_YAML)))
+    pdf = resolve(pdf, cfg.pdf, False)
+    watch = resolve(watch, cfg.watch, False)
+    theme = resolve(theme, cfg.theme, None)
+    open = resolve(open, cfg.open, True)
+
     langs = [code.strip() for code in lang.split(",")] if lang else ["en", "de"]
     resolved_theme = load_theme(theme)
 

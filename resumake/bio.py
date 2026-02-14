@@ -11,6 +11,7 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 from docx.shared import Cm, Pt
 
+from .config import load_config, resolve
 from .docx_builder import (
     add_hyperlink,
     remove_table_borders,
@@ -174,6 +175,12 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
 
     # Photo in left cell
     photo_path = resolve_asset(bio_data["photo"]) if bio_data.get("photo") else None
+    if bio_data.get("photo") and not photo_path:
+        from .console import err_console
+
+        err_console.print(
+            f"[yellow]Warning:[/] Photo '{bio_data['photo']}' not found — skipping."
+        )
     if photo_path and photo_path.exists():
         p_photo = left_cell.paragraphs[0]
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -326,16 +333,23 @@ def build_bio_docx(bio_data: dict, lang: str, theme: Theme | None = None) -> Pat
 
 
 def bio(
-    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = "en",
-    source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
-    pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
-    open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
+    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = None,
+    source: Annotated[Optional[Path], typer.Option(help="Path to source YAML.")] = None,
+    pdf: Annotated[Optional[bool], typer.Option("--pdf/--no-pdf", help="Also generate PDF.")] = None,
+    open: Annotated[Optional[bool], typer.Option("--open/--no-open", help="Open the generated file.")] = None,
     theme: Annotated[
         Optional[str],
         typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
     ] = None,
 ):
     """Generate a condensed one-pager bio document."""
+    cfg = load_config()
+    lang = resolve(lang, cfg.lang, "en")
+    source = Path(resolve(source, cfg.source, str(DEFAULT_YAML)))
+    pdf = resolve(pdf, cfg.pdf, False)
+    open = resolve(open, cfg.open, True)
+    theme = resolve(theme, cfg.theme, None)
+
     cv_en = load_cv(source)
 
     from .console import console

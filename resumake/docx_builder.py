@@ -161,6 +161,14 @@ def add_run_to_para(p, text, bold=False, italic=False, size=None, color=None, fo
 def build_sidebar_header(cell, cv, lang="en"):
     photo_path = resolve_asset(cv["photo"]) if cv.get("photo") else None
 
+    if cv.get("photo") and not photo_path:
+        from .console import err_console
+
+        err_console.print(
+            f"[yellow]Warning:[/] Photo '{cv['photo']}' not found — skipping. "
+            f"Place it in assets/ or remove the photo field from cv.yaml."
+        )
+
     if photo_path and photo_path.exists():
         p_photo = cell.paragraphs[0]
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER

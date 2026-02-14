@@ -7,6 +7,7 @@ from typing import Annotated, Optional
 import typer
 import yaml
 
+from .config import load_config, resolve
 from .console import console, err_console
 from .docx_builder import build_docx
 from .llm import get_provider, strip_yaml_fences
@@ -57,16 +58,23 @@ def tailor(
         Path,
         typer.Argument(help="Path to a .txt or .md file with the project/job description."),
     ],
-    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = "en",
-    source: Annotated[Path, typer.Option(help="Path to source YAML.")] = DEFAULT_YAML,
-    pdf: Annotated[bool, typer.Option("--pdf", help="Also generate PDF.")] = False,
-    open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
+    lang: Annotated[Optional[str], typer.Option(help="Output language code (e.g. en, de, fr). Default: en.")] = None,
+    source: Annotated[Optional[Path], typer.Option(help="Path to source YAML.")] = None,
+    pdf: Annotated[Optional[bool], typer.Option("--pdf/--no-pdf", help="Also generate PDF.")] = None,
+    open: Annotated[Optional[bool], typer.Option("--open/--no-open", help="Open the generated file.")] = None,
     theme: Annotated[
         Optional[str],
         typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
     ] = None,
 ):
     """Produce a tailored CV variant for a specific project or job description."""
+    cfg = load_config()
+    lang = resolve(lang, cfg.lang, "en")
+    source = Path(resolve(source, cfg.source, str(DEFAULT_YAML)))
+    pdf = resolve(pdf, cfg.pdf, False)
+    open = resolve(open, cfg.open, True)
+    theme = resolve(theme, cfg.theme, None)
+
     if not description_file.exists():
         err_console.print(f"[red]Error:[/] File not found: {description_file}")
         raise typer.Exit(1)

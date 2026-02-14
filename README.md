@@ -65,10 +65,11 @@ pip install "resumakeai[all]"       # Everything
 - **Tailor** — reorder and emphasize experience for a specific job description
 - **Cover letter** — AI-generated cover letter matched to a job description
 - **Bio** — generate a condensed one-pager bio document
-- **Export** — convert to Markdown, HTML, or JSON
+- **Export** — convert to Markdown, HTML, JSON, or ATS-friendly plain text
 - **Preview** — instant HTML preview in your browser
 - **Diff** — compare two CV YAML files side by side
-- **Validate** — check your YAML against the schema before building
+- **Validate** — check your YAML against the schema before building, with photo validation
+- **Config file** — persistent build defaults via `.resumakerc.yaml`
 - **Watch mode** — auto-rebuild on file changes
 - **PDF export** — convert generated documents to PDF
 - **Offline by default** — core build requires no API keys or network access
@@ -120,12 +121,13 @@ resumake bio --lang de --pdf
 
 ### `resumake export`
 
-Export your CV to Markdown, HTML, or JSON.
+Export your CV to Markdown, HTML, JSON, or ATS-friendly plain text.
 
 ```bash
 resumake export md                    # Markdown
 resumake export html                  # Self-contained HTML page
 resumake export json                  # Raw JSON
+resumake export txt                   # ATS-friendly plain text
 resumake export md -o resume.md       # Custom output path
 ```
 
@@ -176,6 +178,21 @@ resumake init my-cv                   # In a new directory
 resumake --version                    # Show version
 resumake --help                       # Show help
 ```
+
+## Config File
+
+Create a `.resumakerc.yaml` in your project directory (or `~/.resumakerc.yaml` for global defaults) to avoid repeating CLI options:
+
+```yaml
+lang: "en,de"
+theme: "modern"
+pdf: true
+open: true
+source: "cv.yaml"
+watch: false
+```
+
+Project-level config overrides user-level. CLI flags always take priority over both.
 
 ## CV YAML Structure
 
