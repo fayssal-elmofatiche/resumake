@@ -3,7 +3,7 @@
 
 Output demo.gif
 
-Set Shell "bash"
+Set Shell "zsh"
 Set FontSize 14
 Set Width 900
 Set Height 520
@@ -14,7 +14,7 @@ Set CursorBlink false
 
 # Prepare: work in a clean temp dir with a sample job description
 Hide
-Type "cd $(mktemp -d) && clear"
+Type "source ~/.zshrc 2>/dev/null; cd $(mktemp -d) && clear"
 Enter
 Sleep 500ms
 Show
