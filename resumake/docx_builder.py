@@ -173,7 +173,11 @@ def build_sidebar_header(cell, cv, lang="en"):
         )
 
     if photo_path and photo_path.exists():
-        p_photo = cell.paragraphs[0]
+        # Remove the default empty paragraph — it causes rendering issues on Word for Mac
+        default_p = cell.paragraphs[0]._p
+        p_photo = cell.add_paragraph()
+        cell._tc.remove(default_p)
+
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_photo.paragraph_format.space_after = Pt(8)
         run = p_photo.add_run()
