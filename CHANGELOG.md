@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 
 - **Profile photo not rendering on Word for Mac** — added missing `wp:effectExtent` and `dist*` attributes to inline images (required by OOXML spec, omitted by python-docx 1.2.0).
 - **Duplicate cell width elements** — `set_cell_width()` now removes existing `tcW` before appending, preventing invalid XML.
+- **Sidebar section titles lowercase** — "details" and "skills" labels now correctly capitalized in English.
+- **Photo path resolution** — `resolve_asset()` now handles both bare filenames (`profile.jpeg`) and prefixed paths (`assets/profile.jpeg`).
 
 ## [0.4.0] - 2026-02-13
 

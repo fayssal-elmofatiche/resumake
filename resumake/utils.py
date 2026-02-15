@@ -38,10 +38,10 @@ SECTION_ICONS = {
 # ── i18n labels ──
 LABELS = {
     "en": {
-        "details": "details",
+        "details": "Details",
         "nationality": "Nationality",
         "links": "Links",
-        "skills": "skills",
+        "skills": "Skills",
         "leadership_skills": "Leadership Skills",
         "languages": "Languages",
         "profile": "Profile",
@@ -181,10 +181,17 @@ def slugify_name(name: str) -> str:
 
 
 def resolve_asset(filename: str) -> Path | None:
-    """Find an asset file, checking user's assets/ first, then built-in package assets."""
+    """Find an asset file, checking user's assets/ first, then built-in package assets.
+
+    Handles both bare filenames ("profile.jpeg") and prefixed paths ("assets/profile.jpeg").
+    """
     user_path = ASSETS_DIR / filename
     if user_path.exists():
         return user_path
+    # Support paths like "assets/profile.jpeg" — try relative to project root
+    relative_path = BASE_DIR / filename
+    if relative_path.exists():
+        return relative_path
     builtin_path = BUILTIN_ASSETS_DIR / filename
     if builtin_path.exists():
         return builtin_path

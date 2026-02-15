@@ -322,6 +322,28 @@ Translations are cached per language (e.g. `output/.cv_de_cache.yaml`, `output/.
 
 See [PRIVACY.md](PRIVACY.md) for details on what data is sent and when.
 
+## Roadmap
+
+Planned features for upcoming releases:
+
+### v0.6.0 — Polish & Reliability
+
+- **Direct PDF generation** — HTML-to-PDF via WeasyPrint, removing the dependency on Word/LibreOffice for `--pdf`
+- **Custom sections** — define arbitrary sections in cv.yaml beyond the fixed schema (e.g. "Awards", "Patents", "Projects")
+- **Template variants** — single-column layout, academic CV layout, compact one-pager
+
+### v0.7.0 — Interoperability
+
+- **JSON Resume import/export** — interop with the [jsonresume.org](https://jsonresume.org) ecosystem (`resumake import jsonresume resume.json`, `resumake export jsonresume`)
+- **LinkedIn import** — parse a LinkedIn profile PDF export into cv.yaml (`resumake import linkedin profile.pdf`)
+- **Web preview** — `resumake preview --live` serves a hot-reloading HTML preview
+
+### v0.8.0 — AI Enhancements
+
+- **Content suggestions** — LLM rewrites bullets for impact (quantify achievements, stronger action verbs)
+- **ATS keyword optimization** — given a job description, suggest missing keywords and phrasing improvements
+- **Multi-variant generation** — generate N tailored CV versions from one cv.yaml + N job descriptions in batch
+
 ## Development
 
 ```bash
