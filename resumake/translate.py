@@ -116,8 +116,8 @@ def translate_cv(cv: dict, lang: str = "de", retranslate: bool = False) -> dict:
             "multi-line text. Strings containing colons MUST be quoted. "
             "Translate all values that are natural language text "
             "(descriptions, bullets, titles, skills, etc.). "
-            "Do NOT translate: names, organization names, technology/tool names, "
-            "URLs, email, phone, dates, publication titles, "
+            "Do NOT translate or remove: photo filename, names, organization names, "
+            "technology/tool names, URLs, email, phone, dates, publication titles, "
             "degree program names that are commonly kept in English. "
             f"Use professional {lang.upper()} suitable for a senior-level CV.\n\n"
             "IMPORTANT: At the end of the YAML, add a top-level key `_labels` "
@@ -131,6 +131,24 @@ def translate_cv(cv: dict, lang: str = "de", retranslate: bool = False) -> dict:
 
     # Extract labels before validation
     translated_labels = translated_cv.pop("_labels", None)
+
+    # Preserve non-translatable fields the LLM may have dropped or altered
+    for key in cv:
+        if key not in translated_cv:
+            translated_cv[key] = cv[key]
+    # Always keep these from source (filenames, contact details, URLs)
+    _PASSTHROUGH_KEYS = ("photo",)
+    for key in _PASSTHROUGH_KEYS:
+        if key in cv:
+            translated_cv[key] = cv[key]
+    if "contact" in cv and "contact" in translated_cv:
+        for field in ("email", "phone"):
+            if field in cv["contact"]:
+                translated_cv["contact"][field] = cv["contact"][field]
+    if "links" in cv and "links" in translated_cv:
+        for i, link in enumerate(cv.get("links", [])):
+            if i < len(translated_cv["links"]) and "url" in link:
+                translated_cv["links"][i]["url"] = link["url"]
 
     # Validate completeness
     problems = _validate_translation(cv, translated_cv)
