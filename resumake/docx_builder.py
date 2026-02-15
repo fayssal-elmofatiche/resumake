@@ -57,6 +57,9 @@ def remove_cell_borders(cell):
 
 def set_cell_width(cell, width_cm):
     tcPr = cell._tc.get_or_add_tcPr()
+    # Remove any existing tcW to avoid duplicates
+    for existing in tcPr.findall(qn("w:tcW")):
+        tcPr.remove(existing)
     tcW = parse_xml(f'<w:tcW {nsdecls("w")} w:w="{int(width_cm * 567)}" w:type="dxa"/>')
     tcPr.append(tcW)
 
@@ -174,7 +177,18 @@ def build_sidebar_header(cell, cv, lang="en"):
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_photo.paragraph_format.space_after = Pt(8)
         run = p_photo.add_run()
-        run.add_picture(str(photo_path), width=Cm(2.8))
+        inline_shape = run.add_picture(str(photo_path), width=Cm(2.8))
+
+        # Fix python-docx 1.2.0 missing OOXML attributes (required by Word for Mac)
+        inline_el = inline_shape._inline
+        inline_el.attrib["distT"] = "0"
+        inline_el.attrib["distB"] = "0"
+        inline_el.attrib["distL"] = "0"
+        inline_el.attrib["distR"] = "0"
+        extent = inline_el.find(qn("wp:extent"))
+        if extent is not None and inline_el.find(qn("wp:effectExtent")) is None:
+            effect_extent = parse_xml(f'<wp:effectExtent {nsdecls("wp")} l="0" t="0" r="0" b="0"/>')
+            extent.addnext(effect_extent)
 
     name = cv["name"]
     parts = name.split(" ", 1)

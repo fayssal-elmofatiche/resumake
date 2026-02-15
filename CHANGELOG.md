@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 - **ATS plain-text export** — `resumake export txt` generates applicant tracking system-friendly plain text with ALL CAPS section headers and no formatting.
 - **Photo validation** — `resumake validate` and `resumake build` now warn about missing, unsupported, or oversized photo files referenced in cv.yaml.
 
+### Changed
+
+- Default build language is now English only (use `--lang en,de` for multilingual builds).
+- Translation caching is now opt-in (`--cache`); builds always re-translate by default.
+
+### Fixed
+
+- **Profile photo not rendering on Word for Mac** — added missing `wp:effectExtent` and `dist*` attributes to inline images (required by OOXML spec, omitted by python-docx 1.2.0).
+- **Duplicate cell width elements** — `set_cell_width()` now removes existing `tcW` before appending, preventing invalid XML.
+
 ## [0.4.0] - 2026-02-13
 
 ### Added
