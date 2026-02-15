@@ -89,7 +89,7 @@ resumake build --theme minimal        # Use a different theme
 resumake build --pdf                  # Also generate PDF
 resumake build --no-open              # Don't auto-open the files
 resumake build --watch                # Auto-rebuild on changes
-resumake build --retranslate          # Force fresh translation (ignores cache)
+resumake build --cache                # Reuse cached translations (default: always re-translate)
 ```
 
 ### `resumake tailor`

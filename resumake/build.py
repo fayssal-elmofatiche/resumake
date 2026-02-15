@@ -35,11 +35,9 @@ def _print_summary(outputs: list[Path]):
 def build(
     lang: Annotated[
         Optional[str],
-        typer.Option(help="Comma-separated language codes (e.g. en, de, en,fr,de). Omit to generate EN + DE."),
+        typer.Option(help="Comma-separated language codes (e.g. en,de,fr). Defaults to EN only."),
     ] = None,
-    retranslate: Annotated[
-        bool, typer.Option("--retranslate", help="Force re-translation via LLM (ignores cache).")
-    ] = False,
+    cache: Annotated[bool, typer.Option("--cache/--no-cache", help="Use cached translations if available.")] = False,
     source: Annotated[Optional[Path], typer.Option(help="Path to source YAML.")] = None,
     pdf: Annotated[
         Optional[bool], typer.Option("--pdf/--no-pdf", help="Also generate PDF from the Word documents.")
@@ -62,7 +60,7 @@ def build(
     theme = resolve(theme, cfg.theme, None)
     open = resolve(open, cfg.open, True)
 
-    langs = [code.strip() for code in lang.split(",")] if lang else ["en", "de"]
+    langs = [code.strip() for code in lang.split(",")] if lang else ["en"]
     resolved_theme = load_theme(theme)
 
     def do_build():
@@ -71,7 +69,7 @@ def build(
         for target_lang in langs:
             cv = cv_en
             if target_lang != "en":
-                cv = translate_cv(cv_en, lang=target_lang, retranslate=retranslate)
+                cv = translate_cv(cv_en, lang=target_lang, retranslate=not cache)
             output_path = build_docx(cv, target_lang, theme=resolved_theme)
             outputs.append(output_path)
             if pdf:

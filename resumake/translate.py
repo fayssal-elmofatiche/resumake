@@ -73,7 +73,7 @@ def _parse_yaml_response(response: str, provider, lang: str) -> dict:
             return yaml.safe_load(fixed_yaml)
         except yaml.YAMLError:
             err_console.print("[red]Error:[/] Could not parse translated YAML after retry.")
-            err_console.print("[dim]Run [bold]resumake build --retranslate[/] to try again.[/]")
+            err_console.print("[dim]Run [bold]resumake build[/] to try again.[/]")
             raise SystemExit(1) from e
 
 
@@ -136,7 +136,7 @@ def translate_cv(cv: dict, lang: str = "de", retranslate: bool = False) -> dict:
     problems = _validate_translation(cv, translated_cv)
     if problems:
         console.print(f"[yellow]Warning:[/] Translation incomplete — missing: {', '.join(problems)}")
-        console.print("[dim]Run [bold]resumake build --retranslate[/] to try again.[/]")
+        console.print("[dim]Run [bold]resumake build[/] to try again.[/]")
 
     # Save with source hash and labels for cache
     cache_data = dict(translated_cv)
