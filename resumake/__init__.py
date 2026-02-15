@@ -75,3 +75,15 @@ app.command()(diff)
 from .cover_letter import cover_letter
 
 app.command(name="cover")(cover_letter)
+
+from .import_cmd import import_
+
+app.command(name="import")(import_)
+
+from .suggest_cmd import suggest
+
+app.command()(suggest)
+
+from .ats_cmd import ats
+
+app.command()(ats)

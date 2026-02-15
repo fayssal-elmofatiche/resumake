@@ -26,7 +26,11 @@ def themes():
         primary_swatch = Text(f"  #{t.colors.primary}  ", style=f"on #{t.colors.primary} bold white")
         accent_swatch = Text(f"  #{t.colors.accent}  ", style=f"on #{t.colors.accent} bold white")
         fonts = f"{t.fonts.heading} / {t.fonts.body}"
-        layout = f"{t.layout.sidebar_width_cm}cm + {t.layout.main_width_cm}cm"
+        layout_type = t.layout.layout_type
+        if layout_type == "two-column":
+            layout = f"{t.layout.sidebar_width_cm}cm + {t.layout.main_width_cm}cm"
+        else:
+            layout = layout_type
         label = f"{name} (default)" if name == "classic" else name
         table.add_row(label, primary_swatch, accent_swatch, fonts, layout)
 

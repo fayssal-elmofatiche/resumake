@@ -66,6 +66,9 @@ def tailor(
         Optional[str],
         typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
     ] = None,
+    batch: Annotated[
+        bool, typer.Option("--batch", help="Treat path as a directory and tailor for each .txt/.md file.")
+    ] = False,
 ):
     """Produce a tailored CV variant for a specific project or job description."""
     cfg = load_config()
@@ -74,6 +77,10 @@ def tailor(
     pdf = resolve(pdf, cfg.pdf, False)
     open = resolve(open, cfg.open, True)
     theme = resolve(theme, cfg.theme, None)
+
+    if batch:
+        _tailor_batch(description_file, lang, source, pdf, open, theme)
+        return
 
     if not description_file.exists():
         err_console.print(f"[red]Error:[/] File not found: {description_file}")
@@ -115,3 +122,61 @@ def tailor(
     if open:
         for p in outputs:
             open_file(p)
+
+
+def _tailor_batch(directory: Path, lang: str, source: Path, pdf: bool, open_files: bool, theme_name: str | None):
+    """Process all .txt/.md files in a directory as job descriptions."""
+    from rich.table import Table
+
+    if not directory.is_dir():
+        err_console.print(f"[red]Error:[/] '{directory}' is not a directory. Use --batch with a directory path.")
+        raise typer.Exit(1)
+
+    desc_files = sorted(list(directory.glob("*.txt")) + list(directory.glob("*.md")))
+    if not desc_files:
+        err_console.print(f"[red]Error:[/] No .txt or .md files found in '{directory}'.")
+        raise typer.Exit(1)
+
+    cv_en = load_cv(source)
+    resolved_theme = load_theme(theme_name)
+    name_slug = slugify_name(cv_en["name"])
+    results = []
+
+    for desc_file in desc_files:
+        desc_text = desc_file.read_text(encoding="utf-8").strip()
+        if not desc_text:
+            console.print(f"[yellow]Skipping empty file:[/] {desc_file.name}")
+            results.append((desc_file.name, "skipped", ""))
+            continue
+
+        try:
+            console.print(f"[dim]Processing: {desc_file.name}...[/]")
+            tailored_cv = tailor_cv(cv_en, desc_text)
+            if lang != "en":
+                tailored_cv = translate_cv(tailored_cv, lang=lang, retranslate=True)
+
+            output_path = build_docx(tailored_cv, lang, theme=resolved_theme)
+            slug = _slugify(desc_file.stem)
+            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+            tailored_filename = f"{name_slug}_CV_{lang.upper()}_tailored_{slug}.docx"
+            tailored_path = OUTPUT_DIR / tailored_filename
+            output_path.rename(tailored_path)
+
+            if pdf:
+                pdf_path = convert_to_pdf(tailored_path)
+                results.append((desc_file.name, "done", f"{tailored_path.name}, {pdf_path.name}"))
+            else:
+                results.append((desc_file.name, "done", tailored_path.name))
+        except Exception as e:
+            results.append((desc_file.name, "error", str(e)))
+            err_console.print(f"[red]Error processing {desc_file.name}:[/] {e}")
+
+    # Summary table
+    table = Table(title="Batch Tailoring Results", show_lines=False)
+    table.add_column("Description", style="cyan")
+    table.add_column("Status", justify="center")
+    table.add_column("Output")
+    for name, status, output in results:
+        status_str = f"[green]{status}[/]" if status == "done" else f"[yellow]{status}[/]"
+        table.add_row(name, status_str, output)
+    console.print(table)

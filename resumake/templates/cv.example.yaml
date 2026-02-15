@@ -133,3 +133,16 @@ publications:
     venue: "EuroPython Conference"
 
 references: "Available upon request."
+
+# Custom sections — add any section you like as a top-level list.
+# resumake will render them automatically after the standard sections.
+awards:
+  - title: "Best Paper Award"
+    org: "EuroPython"
+    start: "2023"
+    end: "2023"
+    description: "Awarded for the paper 'Event-Driven Microservices at Scale'."
+  - title: "Employee of the Year"
+    org: "TechCorp GmbH"
+    start: "2022"
+    end: "2022"

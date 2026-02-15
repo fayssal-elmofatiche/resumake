@@ -1,0 +1,24 @@
+name: academic
+colors:
+  primary: "1B2A4A"
+  accent: "8B0000"
+  text_light: "FFFFFF"
+  text_muted: "555555"
+  text_body: "222222"
+fonts:
+  heading: "Cambria"
+  body: "Cambria"
+layout:
+  layout_type: "academic"
+  sidebar_width_cm: 0
+  main_width_cm: 18.0
+  page_top_margin_cm: 2.0
+  page_bottom_margin_cm: 2.0
+  page_left_margin_cm: 2.5
+  page_right_margin_cm: 2.5
+sizes:
+  name_pt: 16
+  heading_pt: 13
+  subheading_pt: 11
+  body_pt: 10
+  small_pt: 9

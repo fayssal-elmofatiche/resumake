@@ -7,6 +7,7 @@ from typing import Annotated, Optional
 import typer
 
 from .console import console
+from .schema import get_custom_sections
 from .utils import DEFAULT_YAML, OUTPUT_DIR, load_cv, open_file, slugify_name
 
 
@@ -90,6 +91,25 @@ def _cv_to_markdown(cv: dict) -> str:
     if cv.get("references"):
         lines.append("## References\n")
         lines.append(cv["references"] + "\n")
+
+    for section_key, items in get_custom_sections(cv).items():
+        heading = section_key.replace("_", " ").title()
+        lines.append(f"## {heading}\n")
+        for item in items:
+            if isinstance(item, str):
+                lines.append(f"- {item}")
+            elif isinstance(item, dict):
+                label = item.get("title") or item.get("name") or ""
+                org = item.get("org", "")
+                org_part = f", {org}" if org else ""
+                dates = ""
+                if item.get("start"):
+                    dates = f" ({item['start']} — {item.get('end', '')})"
+                if label:
+                    lines.append(f"- **{label}**{org_part}{dates}")
+                if item.get("description"):
+                    lines.append(f"  {item['description']}")
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -287,6 +307,28 @@ def _cv_to_plaintext(cv: dict) -> str:
         lines.append(cv["references"])
         lines.append("")
 
+    for section_key, items in get_custom_sections(cv).items():
+        heading = section_key.replace("_", " ").upper()
+        lines.append("=" * 60)
+        lines.append(heading)
+        lines.append("=" * 60)
+        lines.append("")
+        for item in items:
+            if isinstance(item, str):
+                lines.append(f"  - {item}")
+            elif isinstance(item, dict):
+                label = item.get("title") or item.get("name") or ""
+                org = item.get("org", "")
+                org_part = f", {org}" if org else ""
+                dates = ""
+                if item.get("start"):
+                    dates = f" ({item['start']} -- {item.get('end', '')})"
+                if label:
+                    lines.append(f"{label}{org_part}{dates}")
+                if item.get("description"):
+                    lines.append(item["description"])
+        lines.append("")
+
     return "\n".join(lines)
 
 
@@ -298,10 +340,10 @@ def export(
     ] = None,
     open: Annotated[bool, typer.Option("--open/--no-open", help="Open the generated file.")] = True,
 ):
-    """Export CV to Markdown, HTML, or JSON format."""
+    """Export CV to Markdown, HTML, JSON, plain text, or JSON Resume format."""
     format = format.lower().lstrip(".")
-    if format not in ("md", "markdown", "html", "json", "txt", "text"):
-        console.print(f"[red]Error:[/] Unknown format '{format}'. Use: md, html, json, or txt.")
+    if format not in ("md", "markdown", "html", "json", "txt", "text", "jsonresume"):
+        console.print(f"[red]Error:[/] Unknown format '{format}'. Use: md, html, json, txt, or jsonresume.")
         raise typer.Exit(1)
 
     cv = load_cv(source)
@@ -311,11 +353,18 @@ def export(
         content = _cv_to_markdown(cv)
         ext = "md"
     elif format == "html":
-        content = _cv_to_html(cv)
+        from .html_builder import build_html
+
+        content = build_html(cv, "en")
         ext = "html"
     elif format in ("txt", "text"):
         content = _cv_to_plaintext(cv)
         ext = "txt"
+    elif format == "jsonresume":
+        from .jsonresume import cv_to_json_resume
+
+        content = json.dumps(cv_to_json_resume(cv), indent=2, ensure_ascii=False)
+        ext = "json"
     else:
         content = json.dumps(cv, indent=2, ensure_ascii=False)
         ext = "json"

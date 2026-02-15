@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-02-15
+
+### Added
+
+- **Content suggestions** — `resumake suggest` analyzes your CV via AI and suggests bullet improvements (quantify achievements, stronger action verbs, ATS readability).
+- **ATS keyword optimization** — `resumake ats <job-description.txt>` reports keyword match score, matched/missing keywords, and actionable suggestions.
+- **Batch tailoring** — `resumake tailor --batch <directory>/` processes all .txt/.md files in a directory, generating one tailored CV per job description.
+
+## [0.7.0] - 2026-02-15
+
+### Added
+
+- **JSON Resume import/export** — `resumake export jsonresume` and `resumake import jsonresume resume.json` for interop with the jsonresume.org ecosystem.
+- **LinkedIn PDF import** — `resumake import linkedin profile.pdf` extracts and structures a LinkedIn profile export into cv.yaml using AI.
+- **Live web preview** — `resumake preview --live` starts an HTTP server with SSE auto-reload on cv.yaml changes.
+- **Import command** — `resumake import` supports jsonresume and linkedin formats.
+
+## [0.6.0] - 2026-02-15
+
+### Added
+
+- **Custom sections** — define arbitrary sections (awards, patents, projects) in cv.yaml as top-level lists. Automatically rendered in Word, HTML, Markdown, plain text, and translated.
+- **HTML builder** — themed, print-optimized HTML output matching the DOCX layout. Used for `resumake export html`, `resumake preview`, and WeasyPrint PDF.
+- **WeasyPrint PDF engine** — `--pdf-engine weasyprint` generates PDF directly from HTML, removing the dependency on Word/LibreOffice. Falls back to docx2pdf with `--pdf-engine auto`.
+- **Template variants** — `layout_type` in themes: `two-column` (default), `single-column`, `academic` (publications first), `compact` (tighter spacing, no photo). New built-in themes: single-column, academic, compact.
+- **`--pdf-engine` flag** on build — choose between `weasyprint`, `docx2pdf`, or `auto`.
+- **`--theme` flag** on preview command.
+- **`--live` and `--port` flags** on preview command.
+- **`pdf_engine` config key** in `.resumakerc.yaml`.
+
+### Changed
+
+- HTML export now uses the themed HTML builder instead of simple markdown-to-HTML conversion.
+- Preview command now uses the themed HTML builder with `--theme` support.
+
 ## [0.5.0] - 2026-02-14
 
 ### Added

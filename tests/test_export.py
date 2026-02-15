@@ -90,3 +90,22 @@ def test_cv_to_plaintext_optional_sections():
     assert "JANE" in txt
     assert "EXPERIENCE" in txt
     assert "CERTIFICATIONS" not in txt
+
+
+def test_cv_to_markdown_custom_sections(sample_cv):
+    sample_cv["awards"] = [
+        {"title": "Best Paper", "org": "EuroPython", "start": "2023", "end": "2023"},
+    ]
+    md = _cv_to_markdown(sample_cv)
+    assert "## Awards" in md
+    assert "Best Paper" in md
+    assert "EuroPython" in md
+
+
+def test_cv_to_plaintext_custom_sections(sample_cv):
+    sample_cv["awards"] = [
+        {"title": "Best Paper", "org": "EuroPython", "start": "2023", "end": "2023"},
+    ]
+    txt = _cv_to_plaintext(sample_cv)
+    assert "AWARDS" in txt
+    assert "Best Paper" in txt

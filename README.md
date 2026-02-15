@@ -52,26 +52,33 @@ pip install "resumakeai[all]"       # Everything
 | --- | --- | --- |
 | `anthropic` | `anthropic` | AI features via Anthropic Claude |
 | `openai` | `openai` | AI features via OpenAI (or any compatible API) |
-| `pdf` | `docx2pdf` | PDF export via `--pdf` |
-| `watch` | `watchdog` | Auto-rebuild via `--watch` |
+| `pdf` | `docx2pdf` | PDF export via `--pdf` (DOCX-based) |
+| `weasyprint` | `weasyprint` | Direct PDF export from HTML (no Word needed) |
+| `linkedin` | `pdfplumber` | LinkedIn PDF profile import |
+| `watch` | `watchdog` | Auto-rebuild via `--watch` and live preview |
 | `all` | All of the above | Everything |
 
 ## Features
 
 - **YAML-first** — single source of truth for all your CV data
 - **Styled Word output** — two-column layout with sidebar, photo, icons, clickable links, and professional typography
-- **Themes** — three built-in themes or bring your own via YAML
+- **Themes** — six built-in themes (classic, minimal, modern, single-column, academic, compact) or bring your own via YAML
+- **Template variants** — two-column (default), single-column, academic (publications first), and compact layouts
+- **Custom sections** — define arbitrary sections (awards, patents, projects) in cv.yaml as top-level lists
 - **Multilingual** — translate to any language via AI, with per-language caching and auto-invalidation
-- **Tailor** — reorder and emphasize experience for a specific job description
+- **Tailor** — reorder and emphasize experience for a specific job description, with batch mode
 - **Cover letter** — AI-generated cover letter matched to a job description
 - **Bio** — generate a condensed one-pager bio document
-- **Export** — convert to Markdown, HTML, JSON, or ATS-friendly plain text
-- **Preview** — instant HTML preview in your browser
+- **Content suggestions** — AI-powered bullet improvements and CV optimization advice
+- **ATS keyword optimization** — keyword match scoring against job descriptions
+- **Export** — convert to Markdown, HTML, JSON, ATS-friendly plain text, or JSON Resume
+- **Import** — import from JSON Resume or LinkedIn PDF exports
+- **Preview** — instant HTML preview in your browser, with live auto-reload
 - **Diff** — compare two CV YAML files side by side
 - **Validate** — check your YAML against the schema before building, with photo validation
 - **Config file** — persistent build defaults via `.resumakerc.yaml`
 - **Watch mode** — auto-rebuild on file changes
-- **PDF export** — convert generated documents to PDF
+- **PDF export** — via WeasyPrint (HTML-based) or docx2pdf (Word-based)
 - **Offline by default** — core build requires no API keys or network access
 
 ## Commands
@@ -87,6 +94,7 @@ resumake build --lang fr              # French (any language code works)
 resumake build --lang en,fr,de        # Multiple languages at once
 resumake build --theme minimal        # Use a different theme
 resumake build --pdf                  # Also generate PDF
+resumake build --pdf --pdf-engine weasyprint  # PDF via WeasyPrint (no Word needed)
 resumake build --no-open              # Don't auto-open the files
 resumake build --watch                # Auto-rebuild on changes
 resumake build --cache                # Reuse cached translations (default: always re-translate)
@@ -99,6 +107,7 @@ Produce a tailored CV variant for a specific job description. Requires AI.
 ```bash
 resumake tailor job-description.txt
 resumake tailor job-description.txt --lang de --pdf
+resumake tailor --batch jobs/         # Batch: one tailored CV per .txt/.md file in directory
 ```
 
 ### `resumake cover`
@@ -125,10 +134,39 @@ Export your CV to Markdown, HTML, JSON, or ATS-friendly plain text.
 
 ```bash
 resumake export md                    # Markdown
-resumake export html                  # Self-contained HTML page
+resumake export html                  # Styled, themed HTML page
 resumake export json                  # Raw JSON
 resumake export txt                   # ATS-friendly plain text
+resumake export jsonresume            # JSON Resume format
 resumake export md -o resume.md       # Custom output path
+```
+
+### `resumake import`
+
+Import a CV from an external format.
+
+```bash
+resumake import jsonresume resume.json          # From JSON Resume
+resumake import jsonresume resume.json -o cv.yaml
+resumake import linkedin profile.pdf            # From LinkedIn PDF export (requires AI)
+```
+
+### `resumake suggest`
+
+AI-powered CV content improvement suggestions. Requires AI.
+
+```bash
+resumake suggest
+resumake suggest --source custom-cv.yaml
+```
+
+### `resumake ats`
+
+ATS keyword match analysis between your CV and a job description. Requires AI.
+
+```bash
+resumake ats job-description.txt
+resumake ats job-description.txt --source custom-cv.yaml
 ```
 
 ### `resumake preview`
@@ -136,7 +174,10 @@ resumake export md -o resume.md       # Custom output path
 Generate an HTML preview and open it in your browser.
 
 ```bash
-resumake preview
+resumake preview                      # One-shot preview
+resumake preview --theme modern       # With a specific theme
+resumake preview --live               # Live-reloading server
+resumake preview --live --port 3000   # Custom port
 ```
 
 ### `resumake diff`
@@ -322,27 +363,9 @@ Translations are cached per language (e.g. `output/.cv_de_cache.yaml`, `output/.
 
 See [PRIVACY.md](PRIVACY.md) for details on what data is sent and when.
 
-## Roadmap
+## Changelog
 
-Planned features for upcoming releases:
-
-### v0.6.0 — Polish & Reliability
-
-- **Direct PDF generation** — HTML-to-PDF via WeasyPrint, removing the dependency on Word/LibreOffice for `--pdf`
-- **Custom sections** — define arbitrary sections in cv.yaml beyond the fixed schema (e.g. "Awards", "Patents", "Projects")
-- **Template variants** — single-column layout, academic CV layout, compact one-pager
-
-### v0.7.0 — Interoperability
-
-- **JSON Resume import/export** — interop with the [jsonresume.org](https://jsonresume.org) ecosystem (`resumake import jsonresume resume.json`, `resumake export jsonresume`)
-- **LinkedIn import** — parse a LinkedIn profile PDF export into cv.yaml (`resumake import linkedin profile.pdf`)
-- **Web preview** — `resumake preview --live` serves a hot-reloading HTML preview
-
-### v0.8.0 — AI Enhancements
-
-- **Content suggestions** — LLM rewrites bullets for impact (quantify achievements, stronger action verbs)
-- **ATS keyword optimization** — given a job description, suggest missing keywords and phrasing improvements
-- **Multi-variant generation** — generate N tailored CV versions from one cv.yaml + N job descriptions in batch
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Development
 

@@ -10,9 +10,11 @@ from rich.table import Table
 from .config import load_config, resolve
 from .console import console, err_console
 from .docx_builder import build_docx
+from .html_builder import build_html
+from .pdf import convert_to_pdf_auto
 from .theme import load_theme
 from .translate import translate_cv
-from .utils import DEFAULT_YAML, convert_to_pdf, load_cv, open_file
+from .utils import DEFAULT_YAML, load_cv, open_file
 
 
 def _print_summary(outputs: list[Path]):
@@ -50,6 +52,10 @@ def build(
         typer.Option(help="Theme name (classic, minimal, modern) or path to theme.yaml."),
     ] = None,
     open: Annotated[Optional[bool], typer.Option("--open/--no-open", help="Open the generated files.")] = None,
+    pdf_engine: Annotated[
+        Optional[str],
+        typer.Option("--pdf-engine", help="PDF engine: weasyprint, docx2pdf, or auto (default)."),
+    ] = None,
 ):
     """Build full CV documents from YAML source."""
     cfg = load_config()
@@ -59,6 +65,7 @@ def build(
     watch = resolve(watch, cfg.watch, False)
     theme = resolve(theme, cfg.theme, None)
     open = resolve(open, cfg.open, True)
+    pdf_engine = resolve(pdf_engine, cfg.pdf_engine, "auto")
 
     langs = [code.strip() for code in lang.split(",")] if lang else ["en"]
     resolved_theme = load_theme(theme)
@@ -73,7 +80,8 @@ def build(
             output_path = build_docx(cv, target_lang, theme=resolved_theme)
             outputs.append(output_path)
             if pdf:
-                pdf_path = convert_to_pdf(output_path)
+                html_content = build_html(cv, target_lang, theme=resolved_theme)
+                pdf_path = convert_to_pdf_auto(output_path, engine=pdf_engine, html_content=html_content)
                 outputs.append(pdf_path)
         return outputs
 

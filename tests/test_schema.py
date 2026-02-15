@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from resumake.schema import validate_cv
+from resumake.schema import get_custom_sections, validate_cv
 
 
 def test_valid_cv(sample_cv):
@@ -53,3 +53,27 @@ def test_optional_sections(sample_cv):
     assert result.education is None
     assert result.certifications is None
     assert result.publications is None
+
+
+def test_custom_sections_accepted(sample_cv):
+    sample_cv["awards"] = [{"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023"}]
+    result = validate_cv(sample_cv)
+    assert result.name == "Jane Doe"
+
+
+def test_get_custom_sections(sample_cv):
+    sample_cv["awards"] = [{"title": "Best Paper"}]
+    sample_cv["patents"] = [{"title": "Patent X"}]
+    custom = get_custom_sections(sample_cv)
+    assert "awards" in custom
+    assert "patents" in custom
+    assert "experience" not in custom
+    assert "name" not in custom
+
+
+def test_custom_non_list_ignored(sample_cv):
+    sample_cv["awards"] = [{"title": "Best Paper"}]
+    sample_cv["motto"] = "Work hard"  # string, not list → not a custom section
+    custom = get_custom_sections(sample_cv)
+    assert "awards" in custom
+    assert "motto" not in custom

@@ -1,0 +1,24 @@
+name: compact
+colors:
+  primary: "0F141F"
+  accent: "0AA8A7"
+  text_light: "FFFFFF"
+  text_muted: "7A8599"
+  text_body: "333333"
+fonts:
+  heading: "Arial Narrow"
+  body: "Calibri"
+layout:
+  layout_type: "compact"
+  sidebar_width_cm: 4.8
+  main_width_cm: 13.2
+  page_top_margin_cm: 0.8
+  page_bottom_margin_cm: 0.8
+  page_left_margin_cm: 1.0
+  page_right_margin_cm: 1.0
+sizes:
+  name_pt: 12
+  heading_pt: 11
+  subheading_pt: 9
+  body_pt: 8
+  small_pt: 7

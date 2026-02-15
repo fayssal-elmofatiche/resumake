@@ -9,6 +9,7 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import Cm, Pt
 
+from .schema import get_custom_sections
 from .theme import Theme, load_theme
 from .utils import OUTPUT_DIR, SECTION_ICONS, get_labels, parse_start_date, resolve_asset, slugify_name
 
@@ -695,29 +696,132 @@ def build_main_publications(cell, cv, lang="en"):
         )
 
 
+def build_main_custom_section(cell, title, items, lang="en"):
+    """Render a user-defined custom section with heuristic layout.
+
+    Supports three item shapes:
+    - Timeline: dict with title/name + start/end → experience-like rendering
+    - Description: dict with title/name + description → certification-like rendering
+    - Simple strings → bullet list
+    - Fallback: labeled key-value lines
+    """
+    if not items:
+        return
+    add_section_heading(cell, title.replace("_", " ").title())
+
+    for item in items:
+        if isinstance(item, str):
+            # Simple string → bullet
+            p = cell.add_paragraph(style="List Bullet")
+            p.paragraph_format.space_before = Pt(1)
+            p.paragraph_format.space_after = Pt(1)
+            p.text = ""
+            add_run_to_para(
+                p, item, size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
+            )
+        elif isinstance(item, dict):
+            label = item.get("title") or item.get("name") or ""
+            has_dates = "start" in item or "end" in item
+            org = item.get("org", "")
+
+            if label and has_dates:
+                # Timeline style (like experience)
+                title_text = label
+                if org:
+                    title_text += f" — {org}"
+                p_title = cell.add_paragraph()
+                p_title.paragraph_format.space_before = Pt(6)
+                p_title.paragraph_format.space_after = Pt(1)
+                add_run_to_para(
+                    p_title, title_text, bold=True,
+                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb,
+                )
+                dates = f"{item.get('start', '')} — {item.get('end', '')}".strip(" —")
+                if dates:
+                    add_para(
+                        cell, dates, size=Pt(_theme.sizes.small_pt),
+                        color=_theme.colors.text_muted_rgb, space_after=Pt(2),
+                    )
+            elif label:
+                # Description style (like certification)
+                title_text = label
+                if org:
+                    title_text += f", {org}"
+                p_title = cell.add_paragraph()
+                p_title.paragraph_format.space_before = Pt(6)
+                p_title.paragraph_format.space_after = Pt(1)
+                add_run_to_para(
+                    p_title, title_text, bold=True,
+                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb,
+                )
+
+            # Description text
+            if item.get("description"):
+                add_para(
+                    cell, item["description"],
+                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.text_body_rgb,
+                    font_name=_theme.fonts.body, space_after=Pt(2),
+                )
+
+            # Bullets
+            for bullet in item.get("bullets", []):
+                p = cell.add_paragraph(style="List Bullet")
+                p.paragraph_format.space_before = Pt(1)
+                p.paragraph_format.space_after = Pt(1)
+                p.text = ""
+                add_run_to_para(
+                    p, bullet, size=Pt(_theme.sizes.small_pt),
+                    color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
+                )
+
+            # Remaining key-value pairs
+            skip_keys = {"title", "name", "org", "start", "end", "description", "bullets"}
+            for key, val in item.items():
+                if key in skip_keys:
+                    continue
+                if isinstance(val, list):
+                    add_labeled_line(cell, key.replace("_", " ").title(), ", ".join(str(v) for v in val))
+                elif isinstance(val, str):
+                    add_labeled_line(cell, key.replace("_", " ").title(), val)
+
+
 # ── Document assembly ──
 
 
-def build_docx(cv: dict, lang: str, theme: Optional[Theme] = None) -> Path:
-    """Build a complete Word document from CV data."""
-    global _theme
-    _theme = theme or load_theme()
-
+def _init_doc(layout):
+    """Create a Document with page margins set from the layout."""
     doc = Document()
-    layout = _theme.layout
-
     for section in doc.sections:
         section.top_margin = Cm(layout.page_top_margin_cm)
         section.bottom_margin = Cm(layout.page_bottom_margin_cm)
         section.left_margin = Cm(layout.page_left_margin_cm)
         section.right_margin = Cm(layout.page_right_margin_cm)
-
     style = doc.styles["Normal"]
     style.font.name = _theme.fonts.heading
     style.font.size = Pt(_theme.sizes.body_pt)
     style.font.color.rgb = _theme.colors.text_body_rgb
     style.paragraph_format.space_after = Pt(0)
     style.paragraph_format.space_before = Pt(0)
+    return doc
+
+
+def _build_all_main_sections(cell, cv, lang):
+    """Build all main-column sections into a cell (or document body proxy)."""
+    build_main_profile(cell, cv, lang)
+    build_main_experience(cell, cv, lang)
+    build_main_education(cell, cv, lang)
+    build_main_volunteering(cell, cv, lang)
+    build_main_references(cell, cv, lang)
+    build_main_certifications(cell, cv, lang)
+    build_main_publications(cell, cv, lang)
+    for section_key, items in get_custom_sections(cv).items():
+        build_main_custom_section(cell, section_key, items, lang)
+
+
+def _build_two_column_docx(doc, cv, lang):
+    """Standard two-column layout with sidebar."""
+    layout = _theme.layout
 
     table = doc.add_table(rows=1, cols=2)
     remove_table_borders(table)
@@ -749,14 +853,175 @@ def build_docx(cv: dict, lang: str, theme: Optional[Theme] = None) -> Path:
     build_sidebar_languages(sidebar, cv, lang)
 
     main.paragraphs[0].text = ""
+    _build_all_main_sections(main, cv, lang)
 
-    build_main_profile(main, cv, lang)
+
+class _DocProxy:
+    """Adapter that wraps a Document so section builders (expecting a table cell) can write paragraphs."""
+
+    def __init__(self, doc):
+        self._doc = doc
+        self._paragraphs = doc.paragraphs
+
+    @property
+    def paragraphs(self):
+        return self._doc.paragraphs
+
+    def add_paragraph(self, text="", style=None):
+        return self._doc.add_paragraph(text, style=style)
+
+
+def _build_single_column_header(doc, cv, lang):
+    """Inline header for single-column layout: photo + name + title + contact."""
+    # Name
+    p_name = doc.add_paragraph()
+    p_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_name.paragraph_format.space_after = Pt(2)
+    run = p_name.add_run(cv["name"])
+    run.bold = True
+    run.font.size = Pt(_theme.sizes.name_pt)
+    run.font.color.rgb = _theme.colors.primary_rgb
+    run.font.name = _theme.fonts.heading
+
+    # Title
+    p_title = doc.add_paragraph()
+    p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_title.paragraph_format.space_after = Pt(6)
+    run = p_title.add_run(cv["title"])
+    run.italic = True
+    run.font.size = Pt(_theme.sizes.body_pt)
+    run.font.color.rgb = _theme.colors.text_muted_rgb
+    run.font.name = _theme.fonts.heading
+
+    # Contact line
+    contact = cv.get("contact", {})
+    parts = [v for v in [contact.get("email"), contact.get("phone"), contact.get("address")] if v]
+    if parts:
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(4)
+        run = p.add_run(" | ".join(parts))
+        run.font.size = Pt(_theme.sizes.small_pt)
+        run.font.color.rgb = _theme.colors.text_muted_rgb
+        run.font.name = _theme.fonts.body
+
+    # Links
+    links = cv.get("links", [])
+    if links:
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(8)
+        for i, lk in enumerate(links):
+            if i > 0:
+                run = p.add_run("  |  ")
+                run.font.size = Pt(_theme.sizes.small_pt)
+                run.font.color.rgb = _theme.colors.text_muted_rgb
+            if lk.get("url"):
+                add_hyperlink(p, lk["url"], lk["label"], size=Pt(_theme.sizes.small_pt))
+            else:
+                run = p.add_run(lk["label"])
+                run.font.size = Pt(_theme.sizes.small_pt)
+                run.font.color.rgb = _theme.colors.accent_rgb
+
+
+def _build_single_column_docx(doc, cv, lang):
+    """Single-column layout — no sidebar, all sections sequential."""
+    _build_single_column_header(doc, cv, lang)
+    proxy = _DocProxy(doc)
+    _build_all_main_sections(proxy, cv, lang)
+
+
+def _build_academic_docx(doc, cv, lang):
+    """Academic layout — single-column, publications prioritised before experience."""
+    _build_single_column_header(doc, cv, lang)
+    proxy = _DocProxy(doc)
+
+    # Academic order: profile, publications, experience, education, rest
+    build_main_profile(proxy, cv, lang)
+    build_main_publications(proxy, cv, lang)
+    build_main_experience(proxy, cv, lang)
+    build_main_education(proxy, cv, lang)
+    build_main_volunteering(proxy, cv, lang)
+    build_main_references(proxy, cv, lang)
+    build_main_certifications(proxy, cv, lang)
+    for section_key, items in get_custom_sections(cv).items():
+        build_main_custom_section(proxy, section_key, items, lang)
+
+
+def _build_compact_docx(doc, cv, lang):
+    """Compact two-column layout — tighter spacing, skip testimonials and photo."""
+    layout = _theme.layout
+
+    table = doc.add_table(rows=1, cols=2)
+    remove_table_borders(table)
+
+    tbl = table._tbl
+    tblGrid = tbl.find(qn("w:tblGrid"))
+    if tblGrid is not None:
+        gridCols = tblGrid.findall(qn("w:gridCol"))
+        if len(gridCols) >= 2:
+            gridCols[0].set(qn("w:w"), str(int(layout.sidebar_width_cm * 567)))
+            gridCols[1].set(qn("w:w"), str(int(layout.main_width_cm * 567)))
+
+    sidebar = table.cell(0, 0)
+    main = table.cell(0, 1)
+
+    set_cell_shading(sidebar, _theme.colors.primary)
+    remove_cell_borders(sidebar)
+    set_cell_width(sidebar, layout.sidebar_width_cm)
+    set_cell_margins(sidebar, top=0.3, bottom=0.3, left=0.2, right=0.2)
+
+    remove_cell_borders(main)
+    set_cell_width(main, layout.main_width_cm)
+    set_cell_margins(main, top=0.2, bottom=0.3, left=0.4, right=0.2)
+
+    # Compact sidebar — skip photo, add header without photo
+    compact_cv = dict(cv)
+    compact_cv["photo"] = ""  # Skip photo for compactness
+    build_sidebar_header(sidebar, compact_cv, lang)
+    build_sidebar_contact(sidebar, cv, lang)
+    build_sidebar_links(sidebar, cv, lang)
+    build_sidebar_skills(sidebar, cv, lang)
+    build_sidebar_languages(sidebar, cv, lang)
+
+    main.paragraphs[0].text = ""
+
+    # Compact main — skip testimonials
+    L = get_labels(lang)
+    if cv.get("profile"):
+        add_section_heading(main, L["profile"], icon_key="Profile")
+        add_para(
+            main, cv["profile"].strip(),
+            size=Pt(_theme.sizes.body_pt), color=_theme.colors.text_body_rgb,
+            font_name=_theme.fonts.body, space_after=Pt(4),
+        )
     build_main_experience(main, cv, lang)
     build_main_education(main, cv, lang)
     build_main_volunteering(main, cv, lang)
     build_main_references(main, cv, lang)
     build_main_certifications(main, cv, lang)
     build_main_publications(main, cv, lang)
+    for section_key, items in get_custom_sections(cv).items():
+        build_main_custom_section(main, section_key, items, lang)
+
+
+def build_docx(cv: dict, lang: str, theme: Optional[Theme] = None) -> Path:
+    """Build a complete Word document from CV data."""
+    global _theme
+    _theme = theme or load_theme()
+
+    layout = _theme.layout
+    doc = _init_doc(layout)
+
+    layout_type = layout.layout_type
+    if layout_type == "single-column":
+        _build_single_column_docx(doc, cv, lang)
+    elif layout_type == "academic":
+        _build_academic_docx(doc, cv, lang)
+    elif layout_type == "compact":
+        _build_compact_docx(doc, cv, lang)
+    else:
+        _build_two_column_docx(doc, cv, lang)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{slugify_name(cv['name'])}_CV_{lang.upper()}.docx"

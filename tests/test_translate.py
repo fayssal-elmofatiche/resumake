@@ -190,3 +190,51 @@ def test_roundtrip_no_data_loss(sample_cv):
     t = _extract_translatable(sample_cv)
     result = _merge_translation(sample_cv, t)
     assert result == sample_cv
+
+
+# ── Custom section tests ──
+
+
+def test_extract_custom_sections(sample_cv):
+    sample_cv["awards"] = [
+        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023",
+         "description": "Outstanding research."},
+    ]
+    t = _extract_translatable(sample_cv)
+    assert "awards" in t
+    # org, start, end should be excluded from translation
+    assert "org" not in t["awards"][0]
+    assert "start" not in t["awards"][0]
+    assert t["awards"][0]["title"] == "Best Paper"
+    assert t["awards"][0]["description"] == "Outstanding research."
+
+
+def test_extract_custom_sections_strings(sample_cv):
+    sample_cv["hobbies"] = ["Reading", "Running"]
+    t = _extract_translatable(sample_cv)
+    assert t["hobbies"] == ["Reading", "Running"]
+
+
+def test_merge_custom_sections(sample_cv):
+    sample_cv["awards"] = [
+        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023",
+         "description": "Outstanding research."},
+    ]
+    translated = {"awards": [{"title": "Beste Arbeit", "description": "Herausragende Forschung."}]}
+    result = _merge_translation(sample_cv, translated)
+    assert result["awards"][0]["title"] == "Beste Arbeit"
+    assert result["awards"][0]["description"] == "Herausragende Forschung."
+    # Preserved non-translatable fields
+    assert result["awards"][0]["org"] == "Conf"
+    assert result["awards"][0]["start"] == "2023"
+
+
+def test_roundtrip_custom_sections(sample_cv):
+    sample_cv["awards"] = [
+        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023"},
+    ]
+    sample_cv["hobbies"] = ["Reading", "Running"]
+    t = _extract_translatable(sample_cv)
+    result = _merge_translation(sample_cv, t)
+    assert result["awards"] == sample_cv["awards"]
+    assert result["hobbies"] == sample_cv["hobbies"]

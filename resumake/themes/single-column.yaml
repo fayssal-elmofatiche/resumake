@@ -1,0 +1,24 @@
+name: single-column
+colors:
+  primary: "0F141F"
+  accent: "0AA8A7"
+  text_light: "FFFFFF"
+  text_muted: "7A8599"
+  text_body: "333333"
+fonts:
+  heading: "Arial Narrow"
+  body: "Calibri"
+layout:
+  layout_type: "single-column"
+  sidebar_width_cm: 0
+  main_width_cm: 18.0
+  page_top_margin_cm: 1.5
+  page_bottom_margin_cm: 1.5
+  page_left_margin_cm: 2.0
+  page_right_margin_cm: 2.0
+sizes:
+  name_pt: 16
+  heading_pt: 13
+  subheading_pt: 10
+  body_pt: 10
+  small_pt: 9

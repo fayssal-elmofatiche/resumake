@@ -77,7 +77,16 @@ class Publication(BaseModel):
     venue: str
 
 
+KNOWN_KEYS = {
+    "name", "title", "photo", "contact", "links", "skills", "profile",
+    "testimonials", "experience", "education", "volunteering",
+    "references", "certifications", "publications",
+}
+
+
 class CVSchema(BaseModel):
+    model_config = {"extra": "allow"}
+
     name: str
     title: str
     photo: Optional[str] = None
@@ -92,6 +101,11 @@ class CVSchema(BaseModel):
     references: Optional[str] = None
     certifications: Optional[list[Certification]] = None
     publications: Optional[list[Publication]] = None
+
+
+def get_custom_sections(cv: dict) -> dict[str, list]:
+    """Return custom sections — any top-level list not in the known schema keys."""
+    return {k: v for k, v in cv.items() if k not in KNOWN_KEYS and isinstance(v, list)}
 
 
 def validate_cv(data: dict) -> CVSchema:

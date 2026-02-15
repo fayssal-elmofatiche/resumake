@@ -13,6 +13,7 @@ import yaml
 
 from .console import console, err_console
 from .llm import get_provider, strip_yaml_fences
+from .schema import get_custom_sections
 from .utils import LABELS, OUTPUT_DIR, cache_file_for, load_cv
 
 
@@ -82,6 +83,27 @@ def _extract_translatable(cv: dict) -> dict:
     if cv.get("certifications"):
         t["certifications"] = [{k: c[k] for k in ("name", "description") if c.get(k)} for c in cv["certifications"]]
 
+    # Custom sections: extract translatable string values from each item
+    _skip_translate = {"org", "start", "end", "url", "email", "phone"}
+    for section_key, items in get_custom_sections(cv).items():
+        t_items = []
+        for item in items:
+            if isinstance(item, str):
+                t_items.append(item)
+            elif isinstance(item, dict):
+                t_item = {}
+                for k, v in item.items():
+                    if k in _skip_translate:
+                        continue
+                    if isinstance(v, str):
+                        t_item[k] = v
+                    elif isinstance(v, list) and v and isinstance(v[0], str):
+                        t_item[k] = v
+                if t_item:
+                    t_items.append(t_item)
+        if t_items:
+            t[section_key] = t_items
+
     return t
 
 
@@ -137,6 +159,17 @@ def _merge_translation(cv: dict, translated: dict) -> dict:
             if i < len(result["experience"]):
                 for key, val in item_t.items():
                     result["experience"][i][key] = val
+
+    # Custom sections: merge translated values by index
+    for section_key in get_custom_sections(cv):
+        if section_key in translated and section_key in result:
+            for i, item_t in enumerate(translated[section_key]):
+                if i < len(result[section_key]):
+                    if isinstance(item_t, str):
+                        result[section_key][i] = item_t
+                    elif isinstance(item_t, dict) and isinstance(result[section_key][i], dict):
+                        for key, val in item_t.items():
+                            result[section_key][i][key] = val
 
     return result
 

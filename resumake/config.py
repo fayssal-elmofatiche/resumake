@@ -8,7 +8,7 @@ import yaml
 
 CONFIG_FILENAME = ".resumakerc.yaml"
 
-VALID_KEYS = {"lang", "theme", "pdf", "open", "source", "watch"}
+VALID_KEYS = {"lang", "theme", "pdf", "open", "source", "watch", "pdf_engine"}
 
 
 @dataclass
@@ -21,6 +21,7 @@ class ResumakeConfig:
     open: Optional[bool] = None
     source: Optional[str] = None
     watch: Optional[bool] = None
+    pdf_engine: Optional[str] = None
 
 
 def _load_yaml_config(path: Path) -> dict:

@@ -52,8 +52,12 @@ class ThemeFonts:
     body: str = "Calibri"
 
 
+VALID_LAYOUT_TYPES = {"two-column", "single-column", "academic", "compact"}
+
+
 @dataclass
 class ThemeLayout:
+    layout_type: str = "two-column"
     sidebar_width_cm: float = 5.3
     main_width_cm: float = 12.7
     page_top_margin_cm: float = 1.1
@@ -86,6 +90,11 @@ def _theme_from_dict(data: dict) -> Theme:
     fonts = ThemeFonts(**data["fonts"]) if "fonts" in data else ThemeFonts()
     layout = ThemeLayout(**data["layout"]) if "layout" in data else ThemeLayout()
     sizes = ThemeSizes(**data["sizes"]) if "sizes" in data else ThemeSizes()
+    if layout.layout_type not in VALID_LAYOUT_TYPES:
+        raise ValueError(
+            f"Invalid layout_type '{layout.layout_type}'. "
+            f"Valid types: {', '.join(sorted(VALID_LAYOUT_TYPES))}"
+        )
     return Theme(
         name=data.get("name", "custom"),
         colors=colors,
