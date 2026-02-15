@@ -52,7 +52,7 @@ Changelog = "https://github.com/fayssal-elmofatiche/resumake/blob/main/CHANGELOG
 resumake = "resumake:app"
 
 [tool.setuptools.packages.find]
-include = ["resumake"]
+include = ["resumake", "resumake.*"]
 
 [tool.setuptools.package-data]
 resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml", "py.typed"]
