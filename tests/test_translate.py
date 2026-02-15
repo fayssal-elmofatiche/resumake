@@ -197,8 +197,7 @@ def test_roundtrip_no_data_loss(sample_cv):
 
 def test_extract_custom_sections(sample_cv):
     sample_cv["awards"] = [
-        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023",
-         "description": "Outstanding research."},
+        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023", "description": "Outstanding research."},
     ]
     t = _extract_translatable(sample_cv)
     assert "awards" in t
@@ -217,8 +216,7 @@ def test_extract_custom_sections_strings(sample_cv):
 
 def test_merge_custom_sections(sample_cv):
     sample_cv["awards"] = [
-        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023",
-         "description": "Outstanding research."},
+        {"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023", "description": "Outstanding research."},
     ]
     translated = {"awards": [{"title": "Beste Arbeit", "description": "Herausragende Forschung."}]}
     result = _merge_translation(sample_cv, translated)

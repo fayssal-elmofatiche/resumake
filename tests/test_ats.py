@@ -19,13 +19,15 @@ def test_ats_return_structure():
     """Verify expected return structure when we mock the LLM."""
     from resumake.ats_cmd import analyze_ats_match
 
-    mock_response = json.dumps({
-        "score": 75,
-        "matched_keywords": ["Python", "Docker"],
-        "missing_keywords": ["Kubernetes"],
-        "suggestions": [{"keyword": "Kubernetes", "where_to_add": "skills", "phrasing": "Add to technical skills"}],
-        "summary": "Good match overall.",
-    })
+    mock_response = json.dumps(
+        {
+            "score": 75,
+            "matched_keywords": ["Python", "Docker"],
+            "missing_keywords": ["Kubernetes"],
+            "suggestions": [{"keyword": "Kubernetes", "where_to_add": "skills", "phrasing": "Add to technical skills"}],
+            "summary": "Good match overall.",
+        }
+    )
 
     class MockProvider:
         def complete(self, prompt, max_tokens=4096):

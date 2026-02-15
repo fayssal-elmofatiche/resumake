@@ -92,8 +92,7 @@ def _theme_from_dict(data: dict) -> Theme:
     sizes = ThemeSizes(**data["sizes"]) if "sizes" in data else ThemeSizes()
     if layout.layout_type not in VALID_LAYOUT_TYPES:
         raise ValueError(
-            f"Invalid layout_type '{layout.layout_type}'. "
-            f"Valid types: {', '.join(sorted(VALID_LAYOUT_TYPES))}"
+            f"Invalid layout_type '{layout.layout_type}'. Valid types: {', '.join(sorted(VALID_LAYOUT_TYPES))}"
         )
     return Theme(
         name=data.get("name", "custom"),

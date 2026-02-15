@@ -48,8 +48,7 @@ def test_reverse_mapping():
             "profiles": [{"network": "GitHub", "url": "https://github.com/jane"}],
         },
         "work": [
-            {"name": "Corp", "position": "Dev", "startDate": "2020", "endDate": "2021",
-             "highlights": ["Built stuff"]},
+            {"name": "Corp", "position": "Dev", "startDate": "2020", "endDate": "2021", "highlights": ["Built stuff"]},
         ],
         "education": [
             {"institution": "Uni", "studyType": "M.Sc.", "startDate": "2016", "endDate": "2018"},

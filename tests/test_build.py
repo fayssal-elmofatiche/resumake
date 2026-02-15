@@ -36,8 +36,13 @@ def test_build_docx_with_minimal_theme(sample_cv, monkeypatch):
 
 def test_build_docx_with_custom_sections(sample_cv, monkeypatch):
     sample_cv["awards"] = [
-        {"title": "Best Paper", "org": "EuroPython", "start": "2023", "end": "2023",
-         "description": "Awarded for outstanding research."},
+        {
+            "title": "Best Paper",
+            "org": "EuroPython",
+            "start": "2023",
+            "end": "2023",
+            "description": "Awarded for outstanding research.",
+        },
         {"title": "Employee of the Year", "org": "TechCorp"},
     ]
     sample_cv["projects"] = ["Open Source CLI tool", "Internal dashboard"]

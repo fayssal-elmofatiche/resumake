@@ -717,8 +717,11 @@ def build_main_custom_section(cell, title, items, lang="en"):
             p.paragraph_format.space_after = Pt(1)
             p.text = ""
             add_run_to_para(
-                p, item, size=Pt(_theme.sizes.small_pt),
-                color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
+                p,
+                item,
+                size=Pt(_theme.sizes.small_pt),
+                color=_theme.colors.text_body_rgb,
+                font_name=_theme.fonts.body,
             )
         elif isinstance(item, dict):
             label = item.get("title") or item.get("name") or ""
@@ -734,14 +737,20 @@ def build_main_custom_section(cell, title, items, lang="en"):
                 p_title.paragraph_format.space_before = Pt(6)
                 p_title.paragraph_format.space_after = Pt(1)
                 add_run_to_para(
-                    p_title, title_text, bold=True,
-                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb,
+                    p_title,
+                    title_text,
+                    bold=True,
+                    size=Pt(_theme.sizes.body_pt),
+                    color=_theme.colors.primary_rgb,
                 )
                 dates = f"{item.get('start', '')} — {item.get('end', '')}".strip(" —")
                 if dates:
                     add_para(
-                        cell, dates, size=Pt(_theme.sizes.small_pt),
-                        color=_theme.colors.text_muted_rgb, space_after=Pt(2),
+                        cell,
+                        dates,
+                        size=Pt(_theme.sizes.small_pt),
+                        color=_theme.colors.text_muted_rgb,
+                        space_after=Pt(2),
                     )
             elif label:
                 # Description style (like certification)
@@ -752,16 +761,22 @@ def build_main_custom_section(cell, title, items, lang="en"):
                 p_title.paragraph_format.space_before = Pt(6)
                 p_title.paragraph_format.space_after = Pt(1)
                 add_run_to_para(
-                    p_title, title_text, bold=True,
-                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb,
+                    p_title,
+                    title_text,
+                    bold=True,
+                    size=Pt(_theme.sizes.body_pt),
+                    color=_theme.colors.primary_rgb,
                 )
 
             # Description text
             if item.get("description"):
                 add_para(
-                    cell, item["description"],
-                    size=Pt(_theme.sizes.body_pt), color=_theme.colors.text_body_rgb,
-                    font_name=_theme.fonts.body, space_after=Pt(2),
+                    cell,
+                    item["description"],
+                    size=Pt(_theme.sizes.body_pt),
+                    color=_theme.colors.text_body_rgb,
+                    font_name=_theme.fonts.body,
+                    space_after=Pt(2),
                 )
 
             # Bullets
@@ -771,8 +786,11 @@ def build_main_custom_section(cell, title, items, lang="en"):
                 p.paragraph_format.space_after = Pt(1)
                 p.text = ""
                 add_run_to_para(
-                    p, bullet, size=Pt(_theme.sizes.small_pt),
-                    color=_theme.colors.text_body_rgb, font_name=_theme.fonts.body,
+                    p,
+                    bullet,
+                    size=Pt(_theme.sizes.small_pt),
+                    color=_theme.colors.text_body_rgb,
+                    font_name=_theme.fonts.body,
                 )
 
             # Remaining key-value pairs
@@ -991,9 +1009,12 @@ def _build_compact_docx(doc, cv, lang):
     if cv.get("profile"):
         add_section_heading(main, L["profile"], icon_key="Profile")
         add_para(
-            main, cv["profile"].strip(),
-            size=Pt(_theme.sizes.body_pt), color=_theme.colors.text_body_rgb,
-            font_name=_theme.fonts.body, space_after=Pt(4),
+            main,
+            cv["profile"].strip(),
+            size=Pt(_theme.sizes.body_pt),
+            color=_theme.colors.text_body_rgb,
+            font_name=_theme.fonts.body,
+            space_after=Pt(4),
         )
     build_main_experience(main, cv, lang)
     build_main_education(main, cv, lang)

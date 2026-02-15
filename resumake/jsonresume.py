@@ -29,9 +29,7 @@ def cv_to_json_resume(cv: dict) -> dict:
     # Links → profiles
     links = cv.get("links", [])
     if links:
-        jr["basics"]["profiles"] = [
-            {"network": lk["label"], "url": lk["url"]} for lk in links
-        ]
+        jr["basics"]["profiles"] = [{"network": lk["label"], "url": lk["url"]} for lk in links]
 
     # Experience → work
     experience = cv.get("experience", [])
@@ -77,9 +75,7 @@ def cv_to_json_resume(cv: dict) -> dict:
     # Languages
     languages = skills.get("languages", [])
     if languages:
-        jr["languages"] = [
-            {"language": lg["name"], "fluency": lg.get("level", "")} for lg in languages
-        ]
+        jr["languages"] = [{"language": lg["name"], "fluency": lg.get("level", "")} for lg in languages]
 
     # Volunteering
     volunteering = cv.get("volunteering", [])
@@ -149,9 +145,7 @@ def json_resume_to_cv(data: dict) -> dict:
     # Profiles → links
     profiles = basics.get("profiles", [])
     if profiles:
-        cv["links"] = [
-            {"label": p.get("network", ""), "url": p.get("url", "")} for p in profiles
-        ]
+        cv["links"] = [{"label": p.get("network", ""), "url": p.get("url", "")} for p in profiles]
 
     # Work → experience
     work = data.get("work", [])
@@ -245,11 +239,13 @@ def json_resume_to_cv(data: dict) -> dict:
                 year = int(p.get("releaseDate", "0")[:4])
             except (ValueError, TypeError):
                 year = 0
-            cv["publications"].append({
-                "title": p.get("name", ""),
-                "year": year,
-                "venue": p.get("publisher", ""),
-            })
+            cv["publications"].append(
+                {
+                    "title": p.get("name", ""),
+                    "year": year,
+                    "venue": p.get("publisher", ""),
+                }
+            )
 
     # References
     refs = data.get("references", [])

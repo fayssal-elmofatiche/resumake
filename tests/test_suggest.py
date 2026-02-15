@@ -19,10 +19,14 @@ def test_suggest_return_structure():
 
     from resumake.suggest_cmd import suggest_improvements
 
-    mock_response = json.dumps({
-        "suggestions": [{"section": "experience", "original": "Did stuff", "suggested": "Led X", "reason": "better"}],
-        "general": ["Add metrics"],
-    })
+    mock_response = json.dumps(
+        {
+            "suggestions": [
+                {"section": "experience", "original": "Did stuff", "suggested": "Led X", "reason": "better"}
+            ],
+            "general": ["Add metrics"],
+        }
+    )
 
     class MockProvider:
         def complete(self, prompt, max_tokens=4096):

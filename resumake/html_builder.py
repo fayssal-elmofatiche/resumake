@@ -186,7 +186,7 @@ def _render_sidebar_html(cv: dict, theme: Theme, lang: str) -> str:
         parts.append(f'<img class="photo" src="{photo_url}" alt="Photo">')
 
     # Name
-    parts.append(f'<h1>{_esc(cv["name"])}</h1>')
+    parts.append(f"<h1>{_esc(cv['name'])}</h1>")
     parts.append(f'<div class="title">{_esc(cv["title"])}</div>')
 
     # Contact
@@ -257,7 +257,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         for exp in cv["experience"]:
             title_text = exp["title"]
             if exp.get("org"):
-                title_text += f' — {exp["org"]}'
+                title_text += f" — {exp['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
             parts.append(f'<div class="entry-dates">{_esc(exp["start"])} — {_esc(exp["end"])}</div>')
             if exp.get("description"):
@@ -275,13 +275,13 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
                 if isinstance(val, list) and val:
                     parts.append(
                         f'<div class="meta-line"><span class="meta-label">'
-                        f'{_esc(key.replace("_", " ").title())}:</span> '
+                        f"{_esc(key.replace('_', ' ').title())}:</span> "
                         f'<span class="meta-value">{_esc(", ".join(str(v) for v in val))}</span></div>'
                     )
                 elif isinstance(val, str):
                     parts.append(
                         f'<div class="meta-line"><span class="meta-label">'
-                        f'{_esc(key.replace("_", " ").title())}:</span> '
+                        f"{_esc(key.replace('_', ' ').title())}:</span> "
                         f'<span class="meta-value">{_esc(val)}</span></div>'
                     )
 
@@ -316,7 +316,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         for cert in cv["certifications"]:
             title_text = cert["name"]
             if cert.get("org"):
-                title_text += f', {cert["org"]}'
+                title_text += f", {cert['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
             parts.append(f'<div class="entry-dates">{_esc(cert["start"])} — {_esc(cert["end"])}</div>')
             if cert.get("description"):
@@ -345,7 +345,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
                         title_text += f", {org}"
                     parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
                 if item.get("start"):
-                    dates = f'{item["start"]} — {item.get("end", "")}'
+                    dates = f"{item['start']} — {item.get('end', '')}"
                     parts.append(f'<div class="entry-dates">{_esc(dates)}</div>')
                 if item.get("description"):
                     parts.append(f'<div class="body-text">{_esc(item["description"])}</div>')
@@ -357,26 +357,36 @@ def _render_single_column_header_html(cv: dict, theme: Theme, lang: str) -> str:
     """Render an inline header for single-column layouts."""
     parts = []
     parts.append('<div style="text-align:center;margin-bottom:0.5cm">')
-    parts.append(f'<div style="font-size:{theme.sizes.name_pt}pt;font-weight:bold;'
-                 f'color:#{theme.colors.primary}">{_esc(cv["name"])}</div>')
-    parts.append(f'<div style="font-size:{theme.sizes.body_pt}pt;color:#{theme.colors.text_muted};'
-                 f'font-style:italic">{_esc(cv["title"])}</div>')
+    parts.append(
+        f'<div style="font-size:{theme.sizes.name_pt}pt;font-weight:bold;'
+        f'color:#{theme.colors.primary}">{_esc(cv["name"])}</div>'
+    )
+    parts.append(
+        f'<div style="font-size:{theme.sizes.body_pt}pt;color:#{theme.colors.text_muted};'
+        f'font-style:italic">{_esc(cv["title"])}</div>'
+    )
 
     contact = cv.get("contact", {})
     contact_parts = [v for v in [contact.get("email"), contact.get("phone"), contact.get("address")] if v]
     if contact_parts:
-        parts.append(f'<div style="font-size:{theme.sizes.small_pt}pt;color:#{theme.colors.text_muted};'
-                     f'margin-top:0.2cm">{_esc(" | ".join(contact_parts))}</div>')
+        parts.append(
+            f'<div style="font-size:{theme.sizes.small_pt}pt;color:#{theme.colors.text_muted};'
+            f'margin-top:0.2cm">{_esc(" | ".join(contact_parts))}</div>'
+        )
 
     links = cv.get("links", [])
     if links:
-        link_strs = [f'<a href="{_esc(lk["url"])}" style="color:#{theme.colors.accent}">{_esc(lk["label"])}</a>'
-                     for lk in links if lk.get("url")]
+        link_strs = [
+            f'<a href="{_esc(lk["url"])}" style="color:#{theme.colors.accent}">{_esc(lk["label"])}</a>'
+            for lk in links
+            if lk.get("url")
+        ]
         if link_strs:
-            parts.append(f'<div style="font-size:{theme.sizes.small_pt}pt;margin-top:0.1cm">'
-                         f'{" | ".join(link_strs)}</div>')
+            parts.append(
+                f'<div style="font-size:{theme.sizes.small_pt}pt;margin-top:0.1cm">{" | ".join(link_strs)}</div>'
+            )
 
-    parts.append('</div>')
+    parts.append("</div>")
     return "\n".join(parts)
 
 

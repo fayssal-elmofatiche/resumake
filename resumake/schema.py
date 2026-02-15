@@ -78,9 +78,20 @@ class Publication(BaseModel):
 
 
 KNOWN_KEYS = {
-    "name", "title", "photo", "contact", "links", "skills", "profile",
-    "testimonials", "experience", "education", "volunteering",
-    "references", "certifications", "publications",
+    "name",
+    "title",
+    "photo",
+    "contact",
+    "links",
+    "skills",
+    "profile",
+    "testimonials",
+    "experience",
+    "education",
+    "volunteering",
+    "references",
+    "certifications",
+    "publications",
 }
 
 

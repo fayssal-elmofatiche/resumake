@@ -54,8 +54,13 @@ def analyze_ats_match(cv: dict, job_description: str) -> dict:
                 return json.loads(clean[start:end])
             except json.JSONDecodeError:
                 pass
-        return {"score": 0, "matched_keywords": [], "missing_keywords": [],
-                "suggestions": [], "summary": "Could not parse analysis. Try again."}
+        return {
+            "score": 0,
+            "matched_keywords": [],
+            "missing_keywords": [],
+            "suggestions": [],
+            "summary": "Could not parse analysis. Try again.",
+        }
 
 
 def ats(
