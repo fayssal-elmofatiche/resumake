@@ -87,3 +87,7 @@ app.command()(suggest)
 from .ats_cmd import ats
 
 app.command()(ats)
+
+from .web_cmd import web
+
+app.command()(web)

@@ -79,6 +79,7 @@ pip install "resumakeai[all]"       # Everything
 - **Config file** — persistent build defaults via `.resumakerc.yaml`
 - **Watch mode** — auto-rebuild on file changes
 - **PDF export** — via WeasyPrint (HTML-based) or docx2pdf (Word-based)
+- **Web UI** — interactive browser-based editor with live preview, AI tools, import, and LLM settings (`resumake web`)
 - **Offline by default** — core build requires no API keys or network access
 
 ## Commands
@@ -167,6 +168,18 @@ ATS keyword match analysis between your CV and a job description. Requires AI.
 ```bash
 resumake ats job-description.txt
 resumake ats job-description.txt --source custom-cv.yaml
+```
+
+### `resumake web`
+
+Launch an interactive web UI for editing and previewing your CV in the browser. Includes visual YAML editing, live preview, AI tools (tailor, cover letter, ATS, suggestions, bio), import, and LLM provider settings.
+
+```bash
+resumake web                          # Start on http://127.0.0.1:3000 (auto-opens browser)
+resumake web --port 8080              # Custom port
+resumake web --host 0.0.0.0           # Listen on all interfaces
+resumake web --no-open                # Don't auto-open browser
+resumake web my-cv/                   # Use a specific project directory
 ```
 
 ### `resumake preview`

@@ -39,6 +39,18 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Export</span>
         </li>
+        <li class="nav-item" data-page="ai">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"/><line x1="12" y1="11" x2="12" y2="14"/></svg>
+          <span>AI Tools</span>
+        </li>
+        <li class="nav-item" data-page="import">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Import</span>
+        </li>
+        <li class="nav-item" data-page="settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </li>
       </ul>
       <div class="sidebar-footer">
         <div class="save-status" id="save-status">
@@ -52,7 +64,12 @@
     <main class="content">
       <!-- Top Bar -->
       <header class="topbar">
-        <h1 class="page-title" id="page-title">CV Editor</h1>
+        <div class="topbar-left">
+          <button class="btn-hamburger" id="btn-hamburger" onclick="toggleMobileNav()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="page-title" id="page-title">CV Editor</h1>
+        </div>
         <div class="topbar-actions">
           <button class="btn btn-ghost" id="btn-validate" onclick="validateCV()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -64,6 +81,20 @@
           </button>
         </div>
       </header>
+
+      <!-- Validation Errors Banner -->
+      <div class="validation-banner" id="validation-banner" style="display:none">
+        <div class="validation-banner-header">
+          <span class="validation-banner-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Validation Errors
+          </span>
+          <button class="btn-remove" onclick="dismissValidation()" title="Dismiss">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <ul class="validation-errors" id="validation-errors"></ul>
+      </div>
 
       <!-- Page Container -->
       <div class="page-container">
@@ -233,6 +264,18 @@
                 </div>
               </section>
 
+              <!-- Testimonials -->
+              <section class="card" id="section-testimonials">
+                <div class="card-header" onclick="toggleSection('testimonials')">
+                  <h2>Testimonials</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="testimonials-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('testimonials', {name:'',role:'',org:'',quote:''})">+ Add Testimonial</button>
+                </div>
+              </section>
+
               <!-- Publications -->
               <section class="card" id="section-publications">
                 <div class="card-header" onclick="toggleSection('publications')">
@@ -244,6 +287,9 @@
                   <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('publications', {title:'',year:2025,venue:''})">+ Add Publication</button>
                 </div>
               </section>
+
+              <!-- Custom Sections (dynamically rendered) -->
+              <div id="custom-sections-container"></div>
 
               <!-- References -->
               <section class="card" id="section-references">
@@ -364,9 +410,266 @@
           </div>
         </div>
 
+        <!-- ===== AI TOOLS PAGE ===== -->
+        <div class="page" id="page-ai">
+          <p class="page-desc">AI-powered tools to improve, tailor, and extend your CV. Requires an Anthropic or OpenAI API key configured in your environment.</p>
+
+          <!-- Shared Job Description Input -->
+          <div class="card" id="ai-jd-card">
+            <div class="card-header">
+              <h2>Job Description</h2>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Paste the job/project description for tailoring, cover letter, or ATS analysis</label>
+                <textarea id="ai-job-description" rows="6" placeholder="Senior Software Engineer at Acme Corp...&#10;&#10;Responsibilities:&#10;- Design and implement..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Tool Cards Grid -->
+          <div class="ai-tools-grid">
+            <!-- Tailor -->
+            <div class="card ai-tool-card">
+              <div class="card-header">
+                <h2>Tailor CV</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Rewrite and reorder your CV to match a specific job description.</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Theme</label>
+                    <select id="ai-tailor-theme"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Language</label>
+                    <select id="ai-tailor-lang">
+                      <option value="en">English</option>
+                      <option value="de">German</option>
+                      <option value="fr">French</option>
+                      <option value="es">Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="runTailor()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Tailor &amp; Download
+                </button>
+                <div id="tailor-result" class="ai-result" style="display:none"></div>
+              </div>
+            </div>
+
+            <!-- Cover Letter -->
+            <div class="card ai-tool-card">
+              <div class="card-header">
+                <h2>Cover Letter</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Generate a professional cover letter matched to the job description.</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Theme</label>
+                    <select id="ai-cover-theme"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Language</label>
+                    <select id="ai-cover-lang">
+                      <option value="en">English</option>
+                      <option value="de">German</option>
+                      <option value="fr">French</option>
+                      <option value="es">Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="runCoverLetter()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Generate &amp; Download
+                </button>
+                <div id="cover-result" class="ai-result" style="display:none"></div>
+              </div>
+            </div>
+
+            <!-- ATS Check -->
+            <div class="card ai-tool-card">
+              <div class="card-header">
+                <h2>ATS Check</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Analyze keyword match between your CV and a job description.</p>
+                <button class="btn btn-primary" onclick="runATS()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Analyze
+                </button>
+                <div id="ats-result" class="ai-result" style="display:none"></div>
+              </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="card ai-tool-card">
+              <div class="card-header">
+                <h2>Suggestions</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Get AI-powered suggestions to improve your CV content.</p>
+                <button class="btn btn-primary" onclick="runSuggest()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  Get Suggestions
+                </button>
+                <div id="suggest-result" class="ai-result" style="display:none"></div>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="card ai-tool-card">
+              <div class="card-header">
+                <h2>One-Pager Bio</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Generate a condensed one-page professional bio from your CV.</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Theme</label>
+                    <select id="ai-bio-theme"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Language</label>
+                    <select id="ai-bio-lang">
+                      <option value="en">English</option>
+                      <option value="de">German</option>
+                      <option value="fr">French</option>
+                      <option value="es">Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary" onclick="runBio()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Generate &amp; Download
+                </button>
+                <div id="bio-result" class="ai-result" style="display:none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== IMPORT PAGE ===== -->
+        <div class="page" id="page-import">
+          <div class="import-layout">
+            <p class="page-desc">Import your CV from an external format. This will replace the current cv.yaml.</p>
+            <div class="export-grid">
+              <div class="export-card" onclick="document.getElementById('import-jsonresume').click()">
+                <input type="file" id="import-jsonresume" accept=".json" onchange="importCV('jsonresume', this)" hidden>
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <h3>JSON Resume</h3>
+                <p>Import from JSON Resume standard format (.json).</p>
+              </div>
+              <div class="export-card" onclick="document.getElementById('import-linkedin').click()">
+                <input type="file" id="import-linkedin" accept=".pdf" onchange="importCV('linkedin', this)" hidden>
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                </div>
+                <h3>LinkedIn PDF</h3>
+                <p>Import from a LinkedIn profile PDF export.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SETTINGS PAGE ===== -->
+        <div class="page" id="page-settings">
+          <div class="settings-layout">
+            <p class="page-desc">Configure your LLM provider API keys for AI-powered features. Keys are stored in a <code>.env</code> file in your project directory.</p>
+
+            <!-- Provider Status -->
+            <div class="card" id="settings-status-card">
+              <div class="card-header">
+                <h2>Provider Status</h2>
+              </div>
+              <div class="card-body">
+                <div class="provider-status-grid" id="provider-status-grid">
+                  <div class="provider-status" id="status-anthropic">
+                    <span class="provider-dot"></span>
+                    <span class="provider-name">Anthropic (Claude)</span>
+                    <span class="provider-badge">Not configured</span>
+                  </div>
+                  <div class="provider-status" id="status-openai">
+                    <span class="provider-dot"></span>
+                    <span class="provider-name">OpenAI</span>
+                    <span class="provider-badge">Not configured</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Anthropic -->
+            <div class="card">
+              <div class="card-header" onclick="toggleSection('settings-anthropic')">
+                <h2>Anthropic</h2>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Claude is the preferred provider. Get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+                <div class="form-group">
+                  <label>API Key</label>
+                  <div class="key-input-row">
+                    <input type="password" id="settings-anthropic-key" placeholder="sk-ant-api03-...">
+                    <button class="btn btn-sm btn-ghost" onclick="toggleKeyVisibility('settings-anthropic-key')" title="Show/hide">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                  <span class="key-hint" id="hint-anthropic-key"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- OpenAI -->
+            <div class="card">
+              <div class="card-header" onclick="toggleSection('settings-openai')">
+                <h2>OpenAI</h2>
+                <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Used as a fallback if Anthropic is not configured. Also supports compatible APIs (Ollama, LiteLLM) via custom base URL.</p>
+                <div class="form-group">
+                  <label>API Key</label>
+                  <div class="key-input-row">
+                    <input type="password" id="settings-openai-key" placeholder="sk-...">
+                    <button class="btn btn-sm btn-ghost" onclick="toggleKeyVisibility('settings-openai-key')" title="Show/hide">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                  <span class="key-hint" id="hint-openai-key"></span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Base URL <span class="hint">(optional)</span></label>
+                    <input type="url" id="settings-openai-base-url" placeholder="https://api.openai.com/v1">
+                  </div>
+                  <div class="form-group">
+                    <label>Model <span class="hint">(default: gpt-4o)</span></label>
+                    <input type="text" id="settings-openai-model" placeholder="gpt-4o">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="settings-actions">
+              <button class="btn btn-primary btn-lg" onclick="saveSettings()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="nav-overlay" id="nav-overlay" onclick="toggleMobileNav()"></div>
 
   <!-- Toast Notification -->
   <div class="toast-container" id="toast-container"></div>

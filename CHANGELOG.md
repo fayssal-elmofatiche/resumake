@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2026-02-16
+
+### Added
+
+- **Interactive web UI** — `resumake web` launches a browser-based frontend for editing cv.yaml, live preview, building documents, and managing themes.
+- **Web AI tools** — tailor CV, generate cover letters, ATS keyword analysis, content suggestions, and bio generation directly from the web UI.
+- **Web import** — import from JSON Resume or LinkedIn PDF via the web UI.
+- **LLM settings page** — configure Anthropic and OpenAI API keys from the web UI (stored in `.env`, keys are masked in the UI).
+- **Auto-open browser** — `resumake web` automatically opens the browser on start; use `--no-open` to disable.
+
 ## [0.8.0] - 2026-02-15
 
 ### Added

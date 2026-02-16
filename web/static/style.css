@@ -157,15 +157,91 @@ html, body {
   border-bottom: 1px solid var(--border-color);
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .page-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
+.btn-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-hamburger:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 99;
+}
+
+.nav-overlay.open { display: block; }
+
 .topbar-actions {
   display: flex;
   gap: 8px;
+}
+
+/* ==================== Validation Banner ==================== */
+.validation-banner {
+  margin: 0;
+  padding: 12px 28px;
+  background: var(--color-danger-light);
+  border-bottom: 1px solid #f9b5c2;
+}
+
+.validation-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.validation-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.validation-errors {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.validation-errors li {
+  font-size: 12.5px;
+  color: var(--color-danger);
+  padding: 2px 0;
+  padding-left: 22px;
+}
+
+.validation-errors li strong {
+  font-weight: 600;
 }
 
 /* ==================== Pages ==================== */
@@ -744,9 +820,248 @@ select {
 .page-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 .page-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
+/* ==================== AI Tools Page ==================== */
+.ai-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ai-tool-card .card-body { padding-bottom: 20px; }
+
+.ai-result {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-primary-light);
+  border: 1px solid rgba(10,168,167,0.2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ai-result a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ai-result a:hover { text-decoration: underline; }
+
+.ai-result strong { font-weight: 600; }
+
+.ai-result pre {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-result ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.ai-result ul li {
+  margin-bottom: 4px;
+}
+
+/* ATS-specific styles */
+.ats-score {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.ats-section {
+  margin-top: 10px;
+}
+
+.ats-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ats-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ats-tag.matched {
+  background: #d4edda;
+  color: #155724;
+}
+
+.ats-tag.missing {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+/* Suggest list */
+.suggest-list {
+  padding-left: 20px;
+}
+
+.suggest-list li {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.suggest-diff {
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  word-break: break-word;
+}
+
+.suggest-original {
+  text-decoration: line-through;
+  color: var(--color-danger);
+}
+
+.suggest-new {
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+.suggest-general {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(10,168,167,0.15);
+}
+
+/* Import page */
+.import-layout {
+  max-width: 600px;
+}
+
+/* ==================== Settings Page ==================== */
+.settings-layout {
+  max-width: 680px;
+}
+
+.settings-layout code {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.settings-layout a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.settings-layout a:hover { text-decoration: underline; }
+
+.provider-status-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.provider-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+}
+
+.provider-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.provider-dot.configured {
+  background: var(--color-success);
+}
+
+.provider-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  flex: 1;
+}
+
+.provider-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.provider-badge.configured {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: var(--color-success);
+}
+
+.key-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.key-input-row input {
+  flex: 1;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+.key-input-row .btn {
+  flex-shrink: 0;
+  height: 38px;
+}
+
+.key-hint {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.settings-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+}
+
 /* ==================== Responsive ==================== */
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .btn-hamburger { display: flex; }
   .form-row { grid-template-columns: 1fr; }
   .topbar { padding: 0 16px; }
   .page-container { padding: 16px; }

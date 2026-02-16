@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resumakeai"
-version = "0.8.0"
+version = "0.9.0"
 description = "Build styled CV documents from a single YAML source."
 readme = "README.md"
 license = "MIT"
@@ -29,6 +29,9 @@ dependencies = [
     "typer>=0.15.0",
     "rich>=13.0.0",
     "pydantic>=2.0",
+    "fastapi>=0.129.0",
+    "uvicorn>=0.40.0",
+    "python-multipart>=0.0.22",
 ]
 
 [project.optional-dependencies]
@@ -52,10 +55,11 @@ Changelog = "https://github.com/fayssal-elmofatiche/resumake/blob/main/CHANGELOG
 resumake = "resumake:app"
 
 [tool.setuptools.packages.find]
-include = ["resumake", "resumake.*"]
+include = ["resumake", "resumake.*", "web"]
 
 [tool.setuptools.package-data]
 resumake = ["assets/*.png", "themes/*.yaml", "templates/*.yaml", "py.typed"]
+web = ["static/*"]
 
 [tool.ruff]
 target-version = "py311"

@@ -44,14 +44,11 @@ const api = {
     return res.json();
   },
 
-  async getPreviewUrl(theme, lang) {
-    let url = '/api/preview?lang=' + encodeURIComponent(lang || 'en');
-    if (theme) url += '&theme=' + encodeURIComponent(theme);
-    return url;
-  },
-
-  async build() {
-    const res = await this.post('/api/build', {});
+  async build(theme, lang) {
+    const body = {};
+    if (theme) body.theme = theme;
+    if (lang) body.lang = lang;
+    const res = await this.post('/api/build', body);
     return res.json();
   },
 
@@ -88,12 +85,16 @@ function setPage(pageName) {
     themes: 'Themes',
     build: 'Build & Download',
     export: 'Export',
+    ai: 'AI Tools',
+    import: 'Import',
+    settings: 'Settings',
   };
   document.getElementById('page-title').textContent = titles[pageName] || 'resumake';
 
   if (pageName === 'preview') refreshPreview();
   if (pageName === 'themes') renderThemes();
-  if (pageName === 'build') populateBuildSelects();
+  if (pageName === 'build' || pageName === 'ai') populateAllThemeSelects();
+  if (pageName === 'settings') loadSettings();
 }
 
 /* ==================== Save Status ==================== */
@@ -167,12 +168,14 @@ function scheduleSave() {
       showToast('Failed to save: ' + e.message, 'error');
     } finally {
       isSaving = false;
+      saveTimeout = null;
     }
   }, 800);
 }
 
 async function saveNow() {
   clearTimeout(saveTimeout);
+  saveTimeout = null;
   updateSaveStatus('saving', 'Saving...');
   try {
     await api.saveCv(cvData);
@@ -189,15 +192,33 @@ async function validateCV() {
   try {
     const result = await api.validate(cvData);
     if (result.valid) {
+      dismissValidation();
       showToast('CV is valid! No errors found.', 'success');
     } else {
-      const errorList = result.errors.map(e => `${e.field}: ${e.message}`).join('\n');
-      showToast('Validation errors found. Check console for details.', 'error');
-      console.error('Validation errors:', result.errors);
+      showValidationErrors(result.errors);
+      showToast(`${result.errors.length} validation error(s) found.`, 'error');
     }
   } catch (e) {
     showToast('Validation failed: ' + e.message, 'error');
   }
+}
+
+function showValidationErrors(errors) {
+  const banner = document.getElementById('validation-banner');
+  const list = document.getElementById('validation-errors');
+  list.innerHTML = '';
+  errors.forEach(e => {
+    const li = document.createElement('li');
+    li.innerHTML = e.field
+      ? `<strong>${escHtml(e.field)}:</strong> ${escHtml(e.message)}`
+      : escHtml(e.message);
+    list.appendChild(li);
+  });
+  banner.style.display = 'block';
+}
+
+function dismissValidation() {
+  document.getElementById('validation-banner').style.display = 'none';
 }
 
 /* ==================== Form Binding ==================== */
@@ -205,11 +226,7 @@ function bindSimpleInputs() {
   document.querySelectorAll('[data-path]').forEach(input => {
     const path = input.getAttribute('data-path');
     const value = getNestedValue(cvData, path);
-    if (input.tagName === 'TEXTAREA') {
-      input.value = value || '';
-    } else {
-      input.value = value || '';
-    }
+    input.value = value || '';
 
     input.addEventListener('input', () => {
       setNestedValue(cvData, path, input.value);
@@ -252,7 +269,7 @@ function renderLanguages() {
     container.innerHTML += `
       <div class="list-item">
         <div class="list-item-header">
-          <span class="list-item-title">${lang.name || 'New Language'}</span>
+          <span class="list-item-title">${escHtml(lang.name || 'New Language')}</span>
           <div class="list-item-actions">
             <button class="btn-remove" onclick="removeLanguage(${idx})" title="Remove">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -286,6 +303,7 @@ function updateLanguage(idx, field, value) {
 }
 
 function removeLanguage(idx) {
+  if (!confirm('Remove this language?')) return;
   cvData.skills.languages.splice(idx, 1);
   scheduleSave();
   renderLanguages();
@@ -354,6 +372,7 @@ function getItemTitle(section, item) {
     case 'education': return item.degree ? `${item.degree}${item.institution ? ', ' + item.institution : ''}` : '';
     case 'certifications': return item.name || '';
     case 'volunteering': return item.title ? `${item.title}${item.org ? ' — ' + item.org : ''}` : '';
+    case 'testimonials': return item.name ? `${item.name}${item.org ? ' — ' + item.org : ''}` : '';
     case 'publications': return item.title || '';
     case 'links': return item.label || '';
     default: return item.title || item.name || item.label || '';
@@ -383,6 +402,7 @@ function getFieldsForSection(section) {
         { key: 'start', label: 'Start Year', type: 'text' },
         { key: 'end', label: 'End Year', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea', fullWidth: true },
+        { key: 'details', label: 'Details', type: 'textarea', fullWidth: true },
       ];
     case 'certifications':
       return [
@@ -399,6 +419,13 @@ function getFieldsForSection(section) {
         { key: 'start', label: 'Start Date', type: 'text' },
         { key: 'end', label: 'End Date', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea', fullWidth: true },
+      ];
+    case 'testimonials':
+      return [
+        { key: 'name', label: 'Name', type: 'text' },
+        { key: 'role', label: 'Role', type: 'text' },
+        { key: 'org', label: 'Organization', type: 'text' },
+        { key: 'quote', label: 'Quote', type: 'textarea', fullWidth: true },
       ];
     case 'publications':
       return [
@@ -444,6 +471,7 @@ function addListItem(section, template) {
 
 function removeListItem(section, idx) {
   if (!cvData[section]) return;
+  if (!confirm('Remove this item?')) return;
   cvData[section].splice(idx, 1);
   renderListSection(section);
   scheduleSave();
@@ -479,6 +507,7 @@ function addBullet(section, itemIdx) {
 }
 
 function removeBullet(section, itemIdx, bulletIdx) {
+  if (!confirm('Remove this bullet?')) return;
   cvData[section][itemIdx].bullets.splice(bulletIdx, 1);
   renderListSection(section);
   scheduleSave();
@@ -490,9 +519,17 @@ function updateBullet(section, itemIdx, bulletIdx, value) {
 }
 
 /* ==================== Photo Upload ==================== */
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
+
 async function uploadPhoto(input) {
   const file = input.files[0];
   if (!file) return;
+
+  if (file.size > MAX_PHOTO_SIZE) {
+    showToast('Photo must be smaller than 5MB.', 'error');
+    input.value = '';
+    return;
+  }
 
   const formData = new FormData();
   formData.append('file', file);
@@ -516,14 +553,28 @@ async function uploadPhoto(input) {
 function renderPhotoPreview() {
   const el = document.getElementById('photo-preview');
   if (cvData.photo) {
-    el.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    el.innerHTML = `<img src="/api/assets/${encodeURIComponent(cvData.photo)}" alt="Profile photo">`;
     el.style.borderColor = 'var(--color-primary)';
     el.style.borderStyle = 'solid';
+  } else {
+    el.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    el.style.borderColor = '';
+    el.style.borderStyle = '';
   }
 }
 
 /* ==================== Preview ==================== */
-function refreshPreview() {
+async function refreshPreview() {
+  // Flush any pending auto-save so the preview reflects latest edits
+  clearTimeout(saveTimeout);
+  saveTimeout = null;
+  try {
+    await api.saveCv(cvData);
+    updateSaveStatus('', 'Saved');
+  } catch (e) {
+    // Continue to show preview even if save fails
+  }
+
   const theme = document.getElementById('preview-theme')?.value || '';
   const lang = document.getElementById('preview-lang')?.value || 'en';
   const frame = document.getElementById('preview-frame');
@@ -544,19 +595,21 @@ function renderThemes() {
     const fonts = theme.fonts || {};
     const name = theme.name || 'unknown';
     const isSelected = name === selectedTheme;
+    const escapedName = escHtml(name);
+    const safeName = name.replace(/'/g, "\\'");
 
     grid.innerHTML += `
-      <div class="theme-card ${isSelected ? 'selected' : ''}" onclick="selectTheme('${name}')">
-        <div class="theme-name">${name}</div>
+      <div class="theme-card ${isSelected ? 'selected' : ''}" onclick="selectTheme('${safeName}')">
+        <div class="theme-name">${escapedName}</div>
         <div class="theme-colors">
-          <div class="theme-swatch" style="background:#${colors.primary || '333'}" data-label="Primary"></div>
-          <div class="theme-swatch" style="background:#${colors.accent || '666'}" data-label="Accent"></div>
-          <div class="theme-swatch" style="background:#${colors.text_light || 'fff'}" data-label="Light"></div>
-          <div class="theme-swatch" style="background:#${colors.text_muted || '999'}" data-label="Muted"></div>
-          <div class="theme-swatch" style="background:#${colors.text_body || '333'}" data-label="Body"></div>
+          <div class="theme-swatch" style="background:#${escHtml(colors.primary || '333')}" data-label="Primary"></div>
+          <div class="theme-swatch" style="background:#${escHtml(colors.accent || '666')}" data-label="Accent"></div>
+          <div class="theme-swatch" style="background:#${escHtml(colors.text_light || 'fff')}" data-label="Light"></div>
+          <div class="theme-swatch" style="background:#${escHtml(colors.text_muted || '999')}" data-label="Muted"></div>
+          <div class="theme-swatch" style="background:#${escHtml(colors.text_body || '333')}" data-label="Body"></div>
         </div>
         <div class="theme-meta">
-          <strong>Fonts:</strong> ${fonts.heading || 'Default'} / ${fonts.body || 'Default'}
+          <strong>Fonts:</strong> ${escHtml(fonts.heading || 'Default')} / ${escHtml(fonts.body || 'Default')}
         </div>
       </div>
     `;
@@ -566,27 +619,18 @@ function renderThemes() {
 function selectTheme(name) {
   selectedTheme = name;
   renderThemes();
+  syncThemeSelects();
   showToast(`Theme set to "${name}"`, 'info');
 }
 
-/* ==================== Build ==================== */
-function populateBuildSelects() {
-  populateThemeSelect('build-theme');
-}
-
-function populateThemeSelect(selectId) {
-  const select = document.getElementById(selectId);
-  if (!select || select.options.length > 1) return;
-  select.innerHTML = '<option value="">(Default — Classic)</option>';
-  themes.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.name;
-    opt.textContent = t.name.charAt(0).toUpperCase() + t.name.slice(1);
-    if (t.name === selectedTheme) opt.selected = true;
-    select.appendChild(opt);
+function syncThemeSelects() {
+  ['preview-theme', 'build-theme'].forEach(id => {
+    const select = document.getElementById(id);
+    if (select) select.value = selectedTheme;
   });
 }
 
+/* ==================== Build ==================== */
 async function buildCV() {
   const btn = document.getElementById('btn-build');
   const resultDiv = document.getElementById('build-result');
@@ -596,14 +640,16 @@ async function buildCV() {
   try {
     // Save first
     await api.saveCv(cvData);
-    const result = await api.build();
+    const theme = document.getElementById('build-theme')?.value || '';
+    const lang = document.getElementById('build-lang')?.value || 'en';
+    const result = await api.build(theme, lang);
 
     resultDiv.className = 'build-result';
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `
       <strong>Build successful!</strong><br>
-      <span style="color:var(--text-secondary)">${result.filename} (${result.size})</span><br>
-      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${result.filename}</a>
+      <span style="color:var(--text-secondary)">${escHtml(result.filename)} (${escHtml(result.size)})</span><br>
+      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${escHtml(result.filename)}</a>
     `;
     showToast('CV built successfully!', 'success');
   } catch (e) {
@@ -668,7 +714,7 @@ function escHtml(str) {
 
 /* ==================== Populate Theme Selects ==================== */
 function populateAllThemeSelects() {
-  ['preview-theme', 'build-theme'].forEach(id => {
+  ['preview-theme', 'build-theme', 'ai-tailor-theme', 'ai-cover-theme', 'ai-bio-theme'].forEach(id => {
     const select = document.getElementById(id);
     if (!select) return;
     select.innerHTML = '<option value="">(Default — Classic)</option>';
@@ -676,16 +722,451 @@ function populateAllThemeSelects() {
       const opt = document.createElement('option');
       opt.value = t.name;
       opt.textContent = t.name.charAt(0).toUpperCase() + t.name.slice(1);
+      if (t.name === selectedTheme) opt.selected = true;
       select.appendChild(opt);
     });
   });
 }
 
+/* ==================== Custom Sections ==================== */
+const KNOWN_KEYS = new Set([
+  'name', 'title', 'photo', 'contact', 'links', 'skills', 'profile',
+  'testimonials', 'experience', 'education', 'volunteering', 'references',
+  'certifications', 'publications',
+]);
+
+function getCustomSections() {
+  const sections = {};
+  for (const [key, value] of Object.entries(cvData)) {
+    if (!KNOWN_KEYS.has(key) && Array.isArray(value)) {
+      sections[key] = value;
+    }
+  }
+  return sections;
+}
+
+function renderCustomSections() {
+  const container = document.getElementById('custom-sections-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const custom = getCustomSections();
+  for (const [sectionKey, items] of Object.entries(custom)) {
+    const displayName = sectionKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const sectionId = 'custom-' + sectionKey;
+
+    // Infer fields from the first item, or use a generic title/description
+    let fields = [];
+    if (items.length > 0) {
+      fields = Object.keys(items[0]).map(k => ({
+        key: k,
+        label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        type: (typeof items[0][k] === 'string' && items[0][k].length > 80) ? 'textarea' : 'text',
+        fullWidth: typeof items[0][k] === 'string' && items[0][k].length > 80,
+      }));
+    }
+
+    let itemsHtml = '';
+    items.forEach((item, idx) => {
+      const title = escHtml(item.title || item.name || item.label || `Item ${idx + 1}`);
+      let fieldsHtml = '';
+      fields.forEach(field => {
+        if (field.fullWidth) {
+          fieldsHtml += `
+            <div class="form-group">
+              <label>${escHtml(field.label)}</label>
+              <textarea rows="2" onchange="updateCustomItem('${sectionKey}', ${idx}, '${field.key}', this.value)">${escHtml(String(item[field.key] ?? ''))}</textarea>
+            </div>`;
+        } else {
+          fieldsHtml += `
+            <div class="form-group">
+              <label>${escHtml(field.label)}</label>
+              <input type="text" value="${escHtml(String(item[field.key] ?? ''))}" onchange="updateCustomItem('${sectionKey}', ${idx}, '${field.key}', this.value)">
+            </div>`;
+        }
+      });
+
+      itemsHtml += `
+        <div class="list-item">
+          <div class="list-item-header">
+            <span class="list-item-title">${title}</span>
+            <div class="list-item-actions">
+              <button class="btn-remove" onclick="removeCustomItem('${sectionKey}', ${idx})" title="Remove">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-row">${fieldsHtml}</div>
+        </div>`;
+    });
+
+    container.innerHTML += `
+      <section class="card" id="section-${sectionId}">
+        <div class="card-header" onclick="toggleSection('${sectionId}')">
+          <h2>${escHtml(displayName)}</h2>
+          <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="list-editor">${itemsHtml}</div>
+          <button class="btn btn-sm btn-ghost btn-add" onclick="addCustomItem('${sectionKey}')">+ Add ${escHtml(displayName)} Item</button>
+        </div>
+      </section>`;
+  }
+}
+
+function updateCustomItem(section, idx, key, value) {
+  if (cvData[section] && cvData[section][idx]) {
+    cvData[section][idx][key] = value;
+    scheduleSave();
+  }
+}
+
+function removeCustomItem(section, idx) {
+  if (!cvData[section]) return;
+  if (!confirm('Remove this item?')) return;
+  cvData[section].splice(idx, 1);
+  renderCustomSections();
+  scheduleSave();
+}
+
+function addCustomItem(section) {
+  if (!cvData[section] || cvData[section].length === 0) return;
+  // Clone the structure from the first item with empty values
+  const template = {};
+  for (const key of Object.keys(cvData[section][0])) {
+    template[key] = '';
+  }
+  cvData[section].push(template);
+  renderCustomSections();
+  scheduleSave();
+}
+
 /* ==================== Render All Lists ==================== */
 function renderAllLists() {
-  ['links', 'experience', 'education', 'certifications', 'volunteering', 'publications'].forEach(section => {
+  ['links', 'experience', 'education', 'certifications', 'volunteering', 'testimonials', 'publications'].forEach(section => {
     renderListSection(section);
   });
+  renderCustomSections();
+}
+
+/* ==================== AI Tools ==================== */
+function getJobDescription() {
+  const jd = document.getElementById('ai-job-description')?.value?.trim();
+  if (!jd) {
+    showToast('Please enter a job description first.', 'warning');
+    return null;
+  }
+  return jd;
+}
+
+function showAiResult(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+async function runTailor() {
+  const jd = getJobDescription();
+  if (!jd) return;
+
+  const theme = document.getElementById('ai-tailor-theme')?.value || '';
+  const lang = document.getElementById('ai-tailor-lang')?.value || 'en';
+
+  try {
+    showLoading('Tailoring CV...');
+    await api.saveCv(cvData);
+    const res = await api.post('/api/tailor/build', {
+      job_description: jd,
+      lang,
+      theme: theme || null,
+    });
+    const result = await res.json();
+    showAiResult('tailor-result', `
+      <strong>Tailored CV ready!</strong><br>
+      <a href="${escHtml(result.download)}" download>${escHtml(result.filename)}</a>
+    `);
+    showToast('CV tailored successfully!', 'success');
+  } catch (e) {
+    showAiResult('tailor-result', `<strong>Error:</strong> ${escHtml(e.message)}`);
+    showToast('Tailor failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function runCoverLetter() {
+  const jd = getJobDescription();
+  if (!jd) return;
+
+  const theme = document.getElementById('ai-cover-theme')?.value || '';
+  const lang = document.getElementById('ai-cover-lang')?.value || 'en';
+
+  try {
+    showLoading('Generating cover letter...');
+    await api.saveCv(cvData);
+    const res = await api.post('/api/cover-letter/build', {
+      job_description: jd,
+      lang,
+      theme: theme || null,
+    });
+    const result = await res.json();
+    showAiResult('cover-result', `
+      <strong>Cover letter ready!</strong><br>
+      <a href="${escHtml(result.download)}" download>${escHtml(result.filename)}</a>
+    `);
+    showToast('Cover letter generated!', 'success');
+  } catch (e) {
+    showAiResult('cover-result', `<strong>Error:</strong> ${escHtml(e.message)}`);
+    showToast('Cover letter failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function runATS() {
+  const jd = getJobDescription();
+  if (!jd) return;
+
+  try {
+    showLoading('Analyzing ATS keywords...');
+    await api.saveCv(cvData);
+    const res = await api.post('/api/ats', { job_description: jd });
+    const result = await res.json();
+
+    let html = '<strong>ATS Analysis</strong>';
+    if (result.score !== undefined) {
+      html += `<div class="ats-score">Match Score: <strong>${escHtml(String(result.score))}%</strong></div>`;
+    }
+    if (result.matched && result.matched.length) {
+      html += `<div class="ats-section"><strong>Matched Keywords:</strong><div class="ats-tags matched">`;
+      result.matched.forEach(k => { html += `<span class="ats-tag matched">${escHtml(k)}</span>`; });
+      html += '</div></div>';
+    }
+    if (result.missing && result.missing.length) {
+      html += `<div class="ats-section"><strong>Missing Keywords:</strong><div class="ats-tags missing">`;
+      result.missing.forEach(k => { html += `<span class="ats-tag missing">${escHtml(k)}</span>`; });
+      html += '</div></div>';
+    }
+    if (result.suggestions && result.suggestions.length) {
+      html += '<div class="ats-section"><strong>Suggestions:</strong><ul>';
+      result.suggestions.forEach(s => { html += `<li>${escHtml(s)}</li>`; });
+      html += '</ul></div>';
+    }
+
+    showAiResult('ats-result', html);
+    showToast('ATS analysis complete!', 'success');
+  } catch (e) {
+    showAiResult('ats-result', `<strong>Error:</strong> ${escHtml(e.message)}`);
+    showToast('ATS analysis failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function runSuggest() {
+  try {
+    showLoading('Getting AI suggestions...');
+    await api.saveCv(cvData);
+    const res = await api.post('/api/suggest', {});
+    const result = await res.json();
+
+    let html = '<strong>Improvement Suggestions</strong>';
+    if (result.suggestions && result.suggestions.length) {
+      html += '<ul class="suggest-list">';
+      result.suggestions.forEach(s => {
+        html += '<li>';
+        if (s.section) html += `<strong>${escHtml(s.section)}:</strong> `;
+        html += escHtml(s.suggested || s.reason || '');
+        if (s.original && s.suggested) {
+          html += `<div class="suggest-diff"><span class="suggest-original">${escHtml(s.original)}</span> → <span class="suggest-new">${escHtml(s.suggested)}</span></div>`;
+        }
+        html += '</li>';
+      });
+      html += '</ul>';
+    }
+    if (result.general && result.general.length) {
+      html += '<div class="suggest-general"><strong>General Advice</strong><ul class="suggest-list">';
+      result.general.forEach(g => { html += `<li>${escHtml(g)}</li>`; });
+      html += '</ul></div>';
+    }
+    if (!result.suggestions?.length && !result.general?.length) {
+      html += `<pre>${escHtml(JSON.stringify(result, null, 2))}</pre>`;
+    }
+
+    showAiResult('suggest-result', html);
+    showToast('Suggestions ready!', 'success');
+  } catch (e) {
+    showAiResult('suggest-result', `<strong>Error:</strong> ${escHtml(e.message)}`);
+    showToast('Suggestions failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function runBio() {
+  const theme = document.getElementById('ai-bio-theme')?.value || '';
+  const lang = document.getElementById('ai-bio-lang')?.value || 'en';
+
+  try {
+    showLoading('Generating bio...');
+    await api.saveCv(cvData);
+    const res = await api.post('/api/bio/build', {
+      lang,
+      theme: theme || null,
+    });
+    const result = await res.json();
+    showAiResult('bio-result', `
+      <strong>Bio ready!</strong><br>
+      <a href="${escHtml(result.download)}" download>${escHtml(result.filename)}</a>
+    `);
+    showToast('Bio generated!', 'success');
+  } catch (e) {
+    showAiResult('bio-result', `<strong>Error:</strong> ${escHtml(e.message)}`);
+    showToast('Bio generation failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ==================== Import ==================== */
+async function importCV(format, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (!confirm('This will replace your current cv.yaml. Continue?')) {
+    input.value = '';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    showLoading('Importing CV...');
+    const res = await fetch(`/api/import?fmt=${encodeURIComponent(format)}`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || 'Import failed');
+    }
+    const result = await res.json();
+
+    // Reload CV data into editor
+    cvData = result.cv || await api.getCv();
+    bindSimpleInputs();
+    bindSkillsInputs();
+    renderAllLists();
+    renderPhotoPreview();
+
+    showToast(`CV imported from ${format} successfully!`, 'success');
+    setPage('editor');
+  } catch (e) {
+    showToast('Import failed: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+    input.value = '';
+  }
+}
+
+/* ==================== Settings ==================== */
+async function loadSettings() {
+  try {
+    const res = await api.get('/api/settings');
+    const settings = await res.json();
+
+    // Update provider status indicators
+    updateProviderStatus('anthropic', settings.anthropic_configured, settings.anthropic_api_key);
+    updateProviderStatus('openai', settings.openai_configured, settings.openai_api_key);
+
+    // Show masked keys as placeholders (don't fill value — that would send mask back)
+    const anthropicInput = document.getElementById('settings-anthropic-key');
+    const openaiInput = document.getElementById('settings-openai-key');
+
+    anthropicInput.value = '';
+    anthropicInput.placeholder = settings.anthropic_configured ? settings.anthropic_api_key : 'sk-ant-api03-...';
+
+    openaiInput.value = '';
+    openaiInput.placeholder = settings.openai_configured ? settings.openai_api_key : 'sk-...';
+
+    // Hint text showing current status
+    document.getElementById('hint-anthropic-key').textContent =
+      settings.anthropic_configured ? 'Currently configured. Leave blank to keep existing key.' : '';
+    document.getElementById('hint-openai-key').textContent =
+      settings.openai_configured ? 'Currently configured. Leave blank to keep existing key.' : '';
+
+    // Non-secret fields: fill actual values
+    document.getElementById('settings-openai-base-url').value = settings.openai_base_url || '';
+    document.getElementById('settings-openai-model').value = settings.openai_model || '';
+  } catch (e) {
+    showToast('Failed to load settings: ' + e.message, 'error');
+  }
+}
+
+function updateProviderStatus(provider, configured, maskedKey) {
+  const el = document.getElementById('status-' + provider);
+  if (!el) return;
+  const dot = el.querySelector('.provider-dot');
+  const badge = el.querySelector('.provider-badge');
+  if (configured) {
+    dot.className = 'provider-dot configured';
+    badge.className = 'provider-badge configured';
+    badge.textContent = maskedKey || 'Configured';
+  } else {
+    dot.className = 'provider-dot';
+    badge.className = 'provider-badge';
+    badge.textContent = 'Not configured';
+  }
+}
+
+async function saveSettings() {
+  const body = {};
+
+  // Only send keys that the user actually typed (non-empty input value)
+  const anthropicKey = document.getElementById('settings-anthropic-key').value;
+  const openaiKey = document.getElementById('settings-openai-key').value;
+  const baseUrl = document.getElementById('settings-openai-base-url').value;
+  const model = document.getElementById('settings-openai-model').value;
+
+  if (anthropicKey) body.anthropic_api_key = anthropicKey;
+  if (openaiKey) body.openai_api_key = openaiKey;
+  // Always send base_url and model (they're not secrets)
+  body.openai_base_url = baseUrl;
+  body.openai_model = model;
+
+  try {
+    showLoading('Saving settings...');
+    const res = await api.post('/api/settings', body);
+    const settings = await res.json();
+
+    updateProviderStatus('anthropic', settings.anthropic_configured, settings.anthropic_api_key);
+    updateProviderStatus('openai', settings.openai_configured, settings.openai_api_key);
+
+    // Clear key inputs and update placeholders
+    const anthropicInput = document.getElementById('settings-anthropic-key');
+    const openaiInput = document.getElementById('settings-openai-key');
+    anthropicInput.value = '';
+    openaiInput.value = '';
+    anthropicInput.placeholder = settings.anthropic_configured ? settings.anthropic_api_key : 'sk-ant-api03-...';
+    openaiInput.placeholder = settings.openai_configured ? settings.openai_api_key : 'sk-...';
+
+    document.getElementById('hint-anthropic-key').textContent =
+      settings.anthropic_configured ? 'Currently configured. Leave blank to keep existing key.' : '';
+    document.getElementById('hint-openai-key').textContent =
+      settings.openai_configured ? 'Currently configured. Leave blank to keep existing key.' : '';
+
+    showToast('Settings saved!', 'success');
+  } catch (e) {
+    showToast('Failed to save settings: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+function toggleKeyVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  input.type = input.type === 'password' ? 'text' : 'password';
 }
 
 /* ==================== Initialization ==================== */
@@ -725,6 +1206,9 @@ async function init() {
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => {
         setPage(item.getAttribute('data-page'));
+        // Close mobile nav if open
+        document.querySelector('.sidebar').classList.remove('open');
+        document.getElementById('nav-overlay').classList.remove('open');
       });
     });
 
@@ -738,6 +1222,27 @@ async function init() {
     hideLoading();
   }
 }
+
+// Mobile navigation
+function toggleMobileNav() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('nav-overlay').classList.toggle('open');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    saveNow();
+  }
+});
+
+// Warn before closing with unsaved changes
+window.addEventListener('beforeunload', (e) => {
+  if (saveTimeout || isSaving) {
+    e.preventDefault();
+  }
+});
 
 // Start the app
 init();
