@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>resumake — CV Builder</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+          <span>resumake</span>
+        </div>
+      </div>
+      <ul class="nav-items">
+        <li class="nav-item active" data-page="editor">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Editor</span>
+        </li>
+        <li class="nav-item" data-page="preview">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Preview</span>
+        </li>
+        <li class="nav-item" data-page="themes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="13.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/></svg>
+          <span>Themes</span>
+        </li>
+        <li class="nav-item" data-page="build">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Build &amp; Download</span>
+        </li>
+        <li class="nav-item" data-page="export">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Export</span>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="save-status" id="save-status">
+          <span class="status-dot"></span>
+          <span class="status-text">Ready</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <h1 class="page-title" id="page-title">CV Editor</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost" id="btn-validate" onclick="validateCV()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Validate
+          </button>
+          <button class="btn btn-primary" id="btn-save" onclick="saveNow()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Container -->
+      <div class="page-container">
+
+        <!-- ===== EDITOR PAGE ===== -->
+        <div class="page active" id="page-editor">
+          <div class="editor-layout">
+            <div class="editor-main">
+
+              <!-- Basic Info -->
+              <section class="card" id="section-basic">
+                <div class="card-header" onclick="toggleSection('basic')">
+                  <h2>Basic Information</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Full Name</label>
+                      <input type="text" data-path="name" placeholder="Jane Doe">
+                    </div>
+                    <div class="form-group">
+                      <label>Job Title</label>
+                      <input type="text" data-path="title" placeholder="Senior Software Engineer">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Profile Photo</label>
+                    <div class="photo-upload">
+                      <div class="photo-preview" id="photo-preview">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </div>
+                      <div class="photo-actions">
+                        <input type="file" id="photo-input" accept="image/*" onchange="uploadPhoto(this)" hidden>
+                        <button class="btn btn-sm btn-ghost" onclick="document.getElementById('photo-input').click()">Upload Photo</button>
+                        <span class="photo-hint">JPEG, PNG, or GIF. Max 5MB.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Contact -->
+              <section class="card" id="section-contact">
+                <div class="card-header" onclick="toggleSection('contact')">
+                  <h2>Contact Details</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Email</label>
+                      <input type="email" data-path="contact.email" placeholder="jane@example.com">
+                    </div>
+                    <div class="form-group">
+                      <label>Phone</label>
+                      <input type="tel" data-path="contact.phone" placeholder="+49 123 456 7890">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Address</label>
+                      <input type="text" data-path="contact.address" placeholder="Berlin, Germany">
+                    </div>
+                    <div class="form-group">
+                      <label>Nationality</label>
+                      <input type="text" data-path="contact.nationality" placeholder="German">
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Profile -->
+              <section class="card" id="section-profile">
+                <div class="card-header" onclick="toggleSection('profile')">
+                  <h2>Profile Summary</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Professional summary</label>
+                    <textarea data-path="profile" rows="4" placeholder="Senior Software Engineer with 8+ years of experience..."></textarea>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Links -->
+              <section class="card" id="section-links">
+                <div class="card-header" onclick="toggleSection('links')">
+                  <h2>Links</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="links-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('links', {label:'',url:''})">+ Add Link</button>
+                </div>
+              </section>
+
+              <!-- Skills -->
+              <section class="card" id="section-skills">
+                <div class="card-header" onclick="toggleSection('skills')">
+                  <h2>Skills</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Technical Skills <span class="hint">(comma separated)</span></label>
+                    <input type="text" id="skills-technical" placeholder="Python, TypeScript, React, Docker">
+                  </div>
+                  <div class="form-group">
+                    <label>Leadership Skills <span class="hint">(comma separated)</span></label>
+                    <input type="text" id="skills-leadership" placeholder="Team Leadership, Agile Coaching">
+                  </div>
+                  <div class="form-group">
+                    <label>Languages</label>
+                    <div id="languages-list" class="list-editor"></div>
+                    <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('skills.languages', {name:'',level:'basic'})">+ Add Language</button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Experience -->
+              <section class="card" id="section-experience">
+                <div class="card-header" onclick="toggleSection('experience')">
+                  <h2>Experience</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="experience-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('experience', {title:'',org:'',start:'',end:'',description:'',bullets:[]})">+ Add Experience</button>
+                </div>
+              </section>
+
+              <!-- Education -->
+              <section class="card" id="section-education">
+                <div class="card-header" onclick="toggleSection('education')">
+                  <h2>Education</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="education-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('education', {degree:'',institution:'',start:'',end:'',description:''})">+ Add Education</button>
+                </div>
+              </section>
+
+              <!-- Certifications -->
+              <section class="card" id="section-certifications">
+                <div class="card-header" onclick="toggleSection('certifications')">
+                  <h2>Certifications</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="certifications-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('certifications', {name:'',org:'',start:'',end:'',description:''})">+ Add Certification</button>
+                </div>
+              </section>
+
+              <!-- Volunteering -->
+              <section class="card" id="section-volunteering">
+                <div class="card-header" onclick="toggleSection('volunteering')">
+                  <h2>Volunteering</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="volunteering-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('volunteering', {title:'',org:'',start:'',end:'',description:''})">+ Add Volunteering</button>
+                </div>
+              </section>
+
+              <!-- Publications -->
+              <section class="card" id="section-publications">
+                <div class="card-header" onclick="toggleSection('publications')">
+                  <h2>Publications</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div id="publications-list" class="list-editor"></div>
+                  <button class="btn btn-sm btn-ghost btn-add" onclick="addListItem('publications', {title:'',year:2025,venue:''})">+ Add Publication</button>
+                </div>
+              </section>
+
+              <!-- References -->
+              <section class="card" id="section-references">
+                <div class="card-header" onclick="toggleSection('references')">
+                  <h2>References</h2>
+                  <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <textarea data-path="references" rows="2" placeholder="Available upon request."></textarea>
+                  </div>
+                </div>
+              </section>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PREVIEW PAGE ===== -->
+        <div class="page" id="page-preview">
+          <div class="preview-controls">
+            <div class="control-group">
+              <label>Theme</label>
+              <select id="preview-theme" onchange="refreshPreview()"></select>
+            </div>
+            <div class="control-group">
+              <label>Language</label>
+              <select id="preview-lang" onchange="refreshPreview()">
+                <option value="en">English</option>
+                <option value="de">German</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="refreshPreview()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="preview-frame-container">
+            <iframe id="preview-frame" class="preview-frame"></iframe>
+          </div>
+        </div>
+
+        <!-- ===== THEMES PAGE ===== -->
+        <div class="page" id="page-themes">
+          <p class="page-desc">Choose a theme for your CV. The selected theme will be used for preview and build.</p>
+          <div class="themes-grid" id="themes-grid"></div>
+        </div>
+
+        <!-- ===== BUILD PAGE ===== -->
+        <div class="page" id="page-build">
+          <div class="build-layout">
+            <div class="card">
+              <div class="card-header">
+                <h2>Build Your CV</h2>
+              </div>
+              <div class="card-body">
+                <p class="card-desc">Generate a professional Word document (.docx) from your CV data.</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Theme</label>
+                    <select id="build-theme"></select>
+                  </div>
+                  <div class="form-group">
+                    <label>Language</label>
+                    <select id="build-lang">
+                      <option value="en">English</option>
+                      <option value="de">German</option>
+                      <option value="fr">French</option>
+                      <option value="es">Spanish</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-lg" id="btn-build" onclick="buildCV()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Build &amp; Download
+                </button>
+                <div id="build-result" class="build-result" style="display:none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== EXPORT PAGE ===== -->
+        <div class="page" id="page-export">
+          <div class="export-layout">
+            <div class="export-grid">
+              <div class="export-card" onclick="exportCV('md')">
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <h3>Markdown</h3>
+                <p>Export as .md file for documentation and version control.</p>
+              </div>
+              <div class="export-card" onclick="exportCV('html')">
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <h3>HTML</h3>
+                <p>Styled HTML page with theme colors and layout.</p>
+              </div>
+              <div class="export-card" onclick="exportCV('json')">
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <h3>JSON</h3>
+                <p>Raw data as JSON for integrations and APIs.</p>
+              </div>
+              <div class="export-card" onclick="exportCV('txt')">
+                <div class="export-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <h3>Plain Text</h3>
+                <p>ATS-friendly plain text format for job portals.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none">
+    <div class="spinner"></div>
+    <p id="loading-text">Loading...</p>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
