@@ -1208,6 +1208,7 @@ dependencies = [
     { name = "rich" },
     { name = "typer" },
     { name = "uvicorn" },
+    { name = "weasyprint" },
 ]
 
 [package.optional-dependencies]
@@ -1264,6 +1265,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.15.0" },
     { name = "uvicorn", specifier = ">=0.40.0" },
     { name = "watchdog", marker = "extra == 'watch'", specifier = ">=4.0.0" },
+    { name = "weasyprint", specifier = ">=68.1" },
     { name = "weasyprint", marker = "extra == 'weasyprint'", specifier = ">=62.0" },
 ]
 provides-extras = ["anthropic", "openai", "ai", "pdf", "weasyprint", "linkedin", "watch", "all", "dev"]

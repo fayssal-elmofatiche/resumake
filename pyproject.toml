@@ -32,6 +32,7 @@ dependencies = [
     "fastapi>=0.129.0",
     "uvicorn>=0.40.0",
     "python-multipart>=0.0.22",
+    "weasyprint>=68.1",
 ]
 
 [project.optional-dependencies]
