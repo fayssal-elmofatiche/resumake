@@ -46,6 +46,7 @@ def web(
     if not no_open:
         import threading
         import webbrowser
+
         threading.Timer(1.0, webbrowser.open, args=[url]).start()
 
     from web.server import app as web_app

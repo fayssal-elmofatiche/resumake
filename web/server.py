@@ -89,72 +89,86 @@ def _dump_yaml(data: dict) -> str:
 
 def _load_cv_module():
     from resumake.utils import DEFAULT_YAML, load_cv
+
     return DEFAULT_YAML, load_cv
 
 
 def _load_html_builder():
     from resumake.html_builder import build_html
+
     return build_html
 
 
 def _load_docx_builder():
     from resumake.docx_builder import build_docx
+
     return build_docx
 
 
 def _load_theme_module():
     from resumake.theme import BUILTIN_THEMES_DIR, list_themes, load_theme
+
     return BUILTIN_THEMES_DIR, list_themes, load_theme
 
 
 def _load_schema_module():
     from resumake.schema import validate_cv
+
     return validate_cv
 
 
 def _load_export_functions():
     from resumake.export_cmd import _cv_to_html, _cv_to_markdown, _cv_to_plaintext
+
     return _cv_to_markdown, _cv_to_html, _cv_to_plaintext
 
 
 def _load_init_resources():
     from resumake.utils import BUILTIN_ASSETS_DIR, PACKAGE_DIR
+
     TEMPLATES_DIR = PACKAGE_DIR / "templates"
     return TEMPLATES_DIR, BUILTIN_ASSETS_DIR
 
 
 def _load_path_constants():
     from resumake.utils import ASSETS_DIR, DEFAULT_YAML, OUTPUT_DIR
+
     return DEFAULT_YAML, OUTPUT_DIR, ASSETS_DIR
 
 
 def _load_tailor():
     from resumake.tailor import tailor_cv
+
     return tailor_cv
 
 
 def _load_cover_letter():
     from resumake.cover_letter import _build_cover_letter_docx, _generate_cover_letter
+
     return _generate_cover_letter, _build_cover_letter_docx
 
 
 def _load_ats():
     from resumake.ats_cmd import analyze_ats_match
+
     return analyze_ats_match
 
 
 def _load_suggest():
     from resumake.suggest_cmd import suggest_improvements
+
     return suggest_improvements
 
 
 def _load_bio():
     from resumake.bio import build_bio_docx, select_bio_content
+
     return select_bio_content, build_bio_docx
 
 
 def _load_import_helpers():
     from resumake.jsonresume import json_resume_to_cv
+
     return json_resume_to_cv
 
 
@@ -348,11 +362,13 @@ def validate_cv_endpoint(data: dict):
         errors = []
         if hasattr(exc, "errors"):
             for err in exc.errors():
-                errors.append({
-                    "field": " → ".join(str(loc) for loc in err.get("loc", [])),
-                    "message": err.get("msg", str(err)),
-                    "type": err.get("type", ""),
-                })
+                errors.append(
+                    {
+                        "field": " → ".join(str(loc) for loc in err.get("loc", [])),
+                        "message": err.get("msg", str(err)),
+                        "type": err.get("type", ""),
+                    }
+                )
         else:
             errors.append({"field": "", "message": str(exc), "type": "error"})
         return {"valid": False, "errors": errors}
@@ -376,6 +392,7 @@ def export_cv(request: ExportRequest):
         cv = load_cv(DEFAULT_YAML, validate=False)
 
         from resumake.utils import slugify_name
+
         slug = slugify_name(cv["name"])
 
         if fmt in ("md", "markdown"):
@@ -563,8 +580,7 @@ def project_status():
         files = []
         for p in sorted(project_dir.rglob("*")):
             if p.is_file() and not any(
-                part.startswith(".") or part == "__pycache__" or part == "node_modules"
-                for part in p.parts
+                part.startswith(".") or part == "__pycache__" or part == "node_modules" for part in p.parts
             ):
                 try:
                     rel = p.relative_to(project_dir)
@@ -749,6 +765,7 @@ async def import_cv_endpoint(file: UploadFile = File(...), fmt: str = "jsonresum
             import tempfile
 
             from resumake.linkedin import import_linkedin
+
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                 tmp.write(content)
                 tmp_path = Path(tmp.name)
@@ -964,6 +981,7 @@ def main():
     # Remember the resumake repo root (where web/ lives) so it stays on sys.path
     repo_root = Path(__file__).resolve().parent.parent
     import sys
+
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
 
@@ -976,6 +994,7 @@ def main():
     if not args.no_open:
         import threading
         import webbrowser
+
         threading.Timer(1.0, webbrowser.open, args=[url]).start()
 
     uvicorn.run(
