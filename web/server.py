@@ -340,7 +340,7 @@ def build(request: BuildRequest = BuildRequest()):
                 pdf_path = convert_to_pdf_auto(output_path, request.pdf_engine, html_content)
                 response.pdf_filename = pdf_path.name
                 response.pdf_size = _format_size(pdf_path.stat().st_size)
-            except Exception as exc:
+            except (Exception, SystemExit) as exc:
                 response.pdf_filename = None
                 response.pdf_size = f"PDF failed: {exc}"
 
