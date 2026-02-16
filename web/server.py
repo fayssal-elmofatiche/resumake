@@ -5,7 +5,7 @@ Endpoints:
     POST /api/cv                  Save CV data (JSON → YAML)
     GET  /api/preview             HTML preview (query: theme, lang)
     GET  /api/themes              List built-in themes with configs
-    POST /api/build               Build DOCX, return filename & size
+    POST /api/build               Build DOCX (+ optional PDF), return filename & size
     GET  /api/download/{fn}       Download a generated file from output/
     POST /api/validate            Validate CV data against schema
     POST /api/export              Export CV to md/html/json/txt
@@ -117,6 +117,14 @@ def _load_schema_module():
     return validate_cv
 
 
+def _format_size(size_bytes: int) -> str:
+    if size_bytes >= 1_048_576:
+        return f"{size_bytes / 1_048_576:.1f} MB"
+    if size_bytes >= 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes} B"
+
+
 def _load_export_functions():
     from resumake.export_cmd import _cv_to_html, _cv_to_markdown, _cv_to_plaintext
 
@@ -199,6 +207,8 @@ class ExportRequest(BaseModel):
 class BuildResponse(BaseModel):
     filename: str
     size: str
+    pdf_filename: Optional[str] = None
+    pdf_size: Optional[str] = None
 
 
 class JobDescriptionRequest(BaseModel):
@@ -296,6 +306,8 @@ def get_themes():
 class BuildRequest(BaseModel):
     theme: Optional[str] = None
     lang: str = "en"
+    pdf: bool = False
+    pdf_engine: str = "auto"
 
 
 @app.post("/api/build")
@@ -310,15 +322,29 @@ def build(request: BuildRequest = BuildRequest()):
         theme_obj = load_theme(request.theme) if request.theme else load_theme()
         output_path = build_docx(cv, request.lang, theme=theme_obj)
 
-        size_bytes = output_path.stat().st_size
-        if size_bytes >= 1_048_576:
-            size_str = f"{size_bytes / 1_048_576:.1f} MB"
-        elif size_bytes >= 1024:
-            size_str = f"{size_bytes / 1024:.1f} KB"
-        else:
-            size_str = f"{size_bytes} B"
+        size_str = _format_size(output_path.stat().st_size)
 
-        return BuildResponse(filename=output_path.name, size=size_str)
+        response = BuildResponse(filename=output_path.name, size=size_str)
+
+        if request.pdf:
+            try:
+                from resumake.pdf import convert_to_pdf_auto
+
+                html_content = None
+                if request.pdf_engine in ("weasyprint", "auto"):
+                    try:
+                        build_html = _load_html_builder()
+                        html_content = build_html(cv, request.lang, theme=theme_obj)
+                    except Exception:
+                        pass
+                pdf_path = convert_to_pdf_auto(output_path, request.pdf_engine, html_content)
+                response.pdf_filename = pdf_path.name
+                response.pdf_size = _format_size(pdf_path.stat().st_size)
+            except Exception as exc:
+                response.pdf_filename = None
+                response.pdf_size = f"PDF failed: {exc}"
+
+        return response
     except SystemExit:
         raise HTTPException(status_code=404, detail="cv.yaml not found.")
     except Exception as exc:

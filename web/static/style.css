@@ -392,6 +392,21 @@ html, body {
   letter-spacing: 0.4px;
 }
 
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-transform: none !important;
+  font-size: 14px !important;
+  padding-top: 22px;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 .form-group label .hint {
   font-weight: 400;
   text-transform: none;

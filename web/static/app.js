@@ -44,10 +44,11 @@ const api = {
     return res.json();
   },
 
-  async build(theme, lang) {
+  async build(theme, lang, pdf, pdfEngine) {
     const body = {};
     if (theme) body.theme = theme;
     if (lang) body.lang = lang;
+    if (pdf) { body.pdf = true; body.pdf_engine = pdfEngine || 'auto'; }
     const res = await this.post('/api/build', body);
     return res.json();
   },
@@ -642,15 +643,24 @@ async function buildCV() {
     await api.saveCv(cvData);
     const theme = document.getElementById('build-theme')?.value || '';
     const lang = document.getElementById('build-lang')?.value || 'en';
-    const result = await api.build(theme, lang);
+    const pdf = document.getElementById('build-pdf')?.checked || false;
+    const pdfEngine = document.getElementById('build-pdf-engine')?.value || 'auto';
+    const result = await api.build(theme, lang, pdf, pdfEngine);
+
+    let html = `<strong>Build successful!</strong><br>
+      <span style="color:var(--text-secondary)">${escHtml(result.filename)} (${escHtml(result.size)})</span><br>
+      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${escHtml(result.filename)}</a>`;
+
+    if (result.pdf_filename) {
+      html += `<br><span style="color:var(--text-secondary)">${escHtml(result.pdf_filename)} (${escHtml(result.pdf_size)})</span><br>
+        <a href="/api/download/${encodeURIComponent(result.pdf_filename)}" download>Download ${escHtml(result.pdf_filename)}</a>`;
+    } else if (pdf && result.pdf_size) {
+      html += `<br><span style="color:var(--danger)">${escHtml(result.pdf_size)}</span>`;
+    }
 
     resultDiv.className = 'build-result';
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `
-      <strong>Build successful!</strong><br>
-      <span style="color:var(--text-secondary)">${escHtml(result.filename)} (${escHtml(result.size)})</span><br>
-      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${escHtml(result.filename)}</a>
-    `;
+    resultDiv.innerHTML = html;
     showToast('CV built successfully!', 'success');
   } catch (e) {
     resultDiv.className = 'build-result error';
@@ -1211,6 +1221,14 @@ async function init() {
         document.getElementById('nav-overlay').classList.remove('open');
       });
     });
+
+    // Toggle PDF engine selector visibility
+    const pdfCheckbox = document.getElementById('build-pdf');
+    if (pdfCheckbox) {
+      pdfCheckbox.addEventListener('change', () => {
+        document.getElementById('pdf-engine-group').style.display = pdfCheckbox.checked ? '' : 'none';
+      });
+    }
 
     updateSaveStatus('', 'Ready');
     showToast('CV loaded successfully', 'success');
