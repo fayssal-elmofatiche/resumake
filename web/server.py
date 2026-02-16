@@ -447,7 +447,7 @@ async def upload_photo(file: UploadFile = File(...)):
             "status": "ok",
             "filename": file.filename,
             "path": str(dest),
-            "message": f"Photo uploaded and cv.yaml updated.",
+            "message": "Photo uploaded and cv.yaml updated.",
         }
     except HTTPException:
         raise
@@ -747,6 +747,7 @@ async def import_cv_endpoint(file: UploadFile = File(...), fmt: str = "jsonresum
         else:
             # LinkedIn PDF — write temp file, import, clean up
             import tempfile
+
             from resumake.linkedin import import_linkedin
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
                 tmp.write(content)
