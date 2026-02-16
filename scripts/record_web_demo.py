@@ -216,6 +216,7 @@ def record(project_dir: Path, output_video: Path) -> None:
 
     # Wait for server to start
     import urllib.request
+
     for _ in range(30):
         try:
             urllib.request.urlopen("http://127.0.0.1:3199/api/status")
@@ -304,20 +305,32 @@ def convert_to_gif(video_path: Path, gif_path: Path, fps: int = 12, width: int =
         # Generate palette
         subprocess.run(
             [
-                "ffmpeg", "-y", "-i", str(video_path),
-                "-vf", f"fps={fps},scale={width}:-1:flags=lanczos,palettegen=stats_mode=diff",
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(video_path),
+                "-vf",
+                f"fps={fps},scale={width}:-1:flags=lanczos,palettegen=stats_mode=diff",
                 str(palette),
             ],
-            check=True, capture_output=True,
+            check=True,
+            capture_output=True,
         )
         # Convert with palette
         subprocess.run(
             [
-                "ffmpeg", "-y", "-i", str(video_path), "-i", str(palette),
-                "-lavfi", f"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=3",
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(video_path),
+                "-i",
+                str(palette),
+                "-lavfi",
+                f"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=3",
                 str(gif_path),
             ],
-            check=True, capture_output=True,
+            check=True,
+            capture_output=True,
         )
         print(f"GIF saved: {gif_path} ({gif_path.stat().st_size / 1_048_576:.1f} MB)")
     finally:
@@ -325,6 +338,7 @@ def convert_to_gif(video_path: Path, gif_path: Path, fps: int = 12, width: int =
 
 
 # ---------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser(description="Record resumake web UI screencast")
