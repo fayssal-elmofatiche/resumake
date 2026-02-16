@@ -44,11 +44,10 @@ const api = {
     return res.json();
   },
 
-  async build(theme, lang, pdf, pdfEngine) {
+  async build(theme, lang) {
     const body = {};
     if (theme) body.theme = theme;
     if (lang) body.lang = lang;
-    if (pdf) { body.pdf = true; body.pdf_engine = pdfEngine || 'auto'; }
     const res = await this.post('/api/build', body);
     return res.json();
   },
@@ -643,24 +642,15 @@ async function buildCV() {
     await api.saveCv(cvData);
     const theme = document.getElementById('build-theme')?.value || '';
     const lang = document.getElementById('build-lang')?.value || 'en';
-    const pdf = document.getElementById('build-pdf')?.checked || false;
-    const pdfEngine = document.getElementById('build-pdf-engine')?.value || 'auto';
-    const result = await api.build(theme, lang, pdf, pdfEngine);
-
-    let html = `<strong>Build successful!</strong><br>
-      <span style="color:var(--text-secondary)">${escHtml(result.filename)} (${escHtml(result.size)})</span><br>
-      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${escHtml(result.filename)}</a>`;
-
-    if (result.pdf_filename) {
-      html += `<br><span style="color:var(--text-secondary)">${escHtml(result.pdf_filename)} (${escHtml(result.pdf_size)})</span><br>
-        <a href="/api/download/${encodeURIComponent(result.pdf_filename)}" download>Download ${escHtml(result.pdf_filename)}</a>`;
-    } else if (pdf && result.pdf_size) {
-      html += `<br><span style="color:var(--danger)">${escHtml(result.pdf_size)}</span>`;
-    }
+    const result = await api.build(theme, lang);
 
     resultDiv.className = 'build-result';
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = html;
+    resultDiv.innerHTML = `
+      <strong>Build successful!</strong><br>
+      <span style="color:var(--text-secondary)">${escHtml(result.filename)} (${escHtml(result.size)})</span><br>
+      <a href="/api/download/${encodeURIComponent(result.filename)}" download>Download ${escHtml(result.filename)}</a>
+    `;
     showToast('CV built successfully!', 'success');
   } catch (e) {
     resultDiv.className = 'build-result error';
@@ -671,8 +661,40 @@ async function buildCV() {
     btn.disabled = false;
     btn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Build & Download
+      Build & Download DOCX
     `;
+  }
+}
+
+/* ==================== Save as PDF ==================== */
+async function saveAsPDF() {
+  try {
+    await api.saveCv(cvData);
+    const theme = document.getElementById('build-theme')?.value || '';
+    const lang = document.getElementById('build-lang')?.value || 'en';
+    showToast('Generating PDF preview...', 'info');
+
+    const params = new URLSearchParams();
+    if (theme) params.set('theme', theme);
+    if (lang) params.set('lang', lang);
+
+    const res = await fetch('/api/preview?' + params.toString());
+    if (!res.ok) throw new Error('Failed to generate preview');
+    const html = await res.text();
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast('Pop-up blocked — please allow pop-ups for this site', 'error');
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+  } catch (e) {
+    showToast('PDF failed: ' + e.message, 'error');
   }
 }
 
@@ -1221,14 +1243,6 @@ async function init() {
         document.getElementById('nav-overlay').classList.remove('open');
       });
     });
-
-    // Toggle PDF engine selector visibility
-    const pdfCheckbox = document.getElementById('build-pdf');
-    if (pdfCheckbox) {
-      pdfCheckbox.addEventListener('change', () => {
-        document.getElementById('pdf-engine-group').style.display = pdfCheckbox.checked ? '' : 'none';
-      });
-    }
 
     updateSaveStatus('', 'Ready');
     showToast('CV loaded successfully', 'success');

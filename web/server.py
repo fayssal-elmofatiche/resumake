@@ -207,8 +207,6 @@ class ExportRequest(BaseModel):
 class BuildResponse(BaseModel):
     filename: str
     size: str
-    pdf_filename: Optional[str] = None
-    pdf_size: Optional[str] = None
 
 
 class JobDescriptionRequest(BaseModel):
@@ -306,8 +304,6 @@ def get_themes():
 class BuildRequest(BaseModel):
     theme: Optional[str] = None
     lang: str = "en"
-    pdf: bool = False
-    pdf_engine: str = "auto"
 
 
 @app.post("/api/build")
@@ -324,27 +320,7 @@ def build(request: BuildRequest = BuildRequest()):
 
         size_str = _format_size(output_path.stat().st_size)
 
-        response = BuildResponse(filename=output_path.name, size=size_str)
-
-        if request.pdf:
-            try:
-                from resumake.pdf import convert_to_pdf_auto
-
-                html_content = None
-                if request.pdf_engine in ("weasyprint", "auto"):
-                    try:
-                        build_html = _load_html_builder()
-                        html_content = build_html(cv, request.lang, theme=theme_obj)
-                    except Exception:
-                        pass
-                pdf_path = convert_to_pdf_auto(output_path, request.pdf_engine, html_content)
-                response.pdf_filename = pdf_path.name
-                response.pdf_size = _format_size(pdf_path.stat().st_size)
-            except (Exception, SystemExit) as exc:
-                response.pdf_filename = None
-                response.pdf_size = f"PDF failed: {exc}"
-
-        return response
+        return BuildResponse(filename=output_path.name, size=size_str)
     except SystemExit:
         raise HTTPException(status_code=404, detail="cv.yaml not found.")
     except Exception as exc:
