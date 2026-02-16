@@ -201,7 +201,6 @@ def record(project_dir: Path, output_video: Path) -> None:
     from playwright.sync_api import sync_playwright
 
     repo_root = Path(__file__).resolve().parent.parent
-    web_dir = repo_root / "web"
 
     # Start the server in a subprocess
     server = subprocess.Popen(
