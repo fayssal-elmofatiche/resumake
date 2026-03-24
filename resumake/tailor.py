@@ -34,6 +34,8 @@ def tailor_cv(cv: dict, description_text: str) -> dict:
             "- Reorder the experience entries so the most relevant ones come first.\n"
             "- For each experience entry, you may reorder bullets to foreground relevant ones.\n"
             "- You may slightly rephrase bullets to better highlight relevance, but do not change facts.\n"
+            "- When rephrasing, apply the STAR method: lead with context (situation/task), "
+            "then action, then measurable result.\n"
             "- Keep all experience entries — do not remove any.\n"
             "- Reorder skills to foreground the most relevant ones.\n"
             "- Keep education, certifications, publications, volunteering, and references unchanged.\n\n"

@@ -29,10 +29,17 @@ def suggest_improvements(cv: dict) -> dict:
 
     with console.status("Analyzing CV for improvements..."):
         response = provider.complete(
-            "Analyze the following CV and suggest improvements. Focus on:\n"
+            "Analyze the following CV and suggest improvements.\n\n"
+            "Apply the STAR method (Situation, Task, Action, Result) to rewrite weak bullets:\n"
+            "- Situation: set the scene (team size, scope, industry context)\n"
+            "- Task: what you were responsible for\n"
+            "- Action: what you specifically did\n"
+            "- Result: measurable outcome (numbers, percentages, time saved)\n"
+            "Prefer fewer, more detailed STAR bullets over many shallow ones.\n\n"
+            "Also focus on:\n"
             "1. Quantifying achievements (add numbers, percentages, metrics)\n"
             "2. Using stronger action verbs (led, architected, delivered vs worked on, helped)\n"
-            "3. Removing vague language\n"
+            "3. Removing vague language (e.g. 'conducted market research' → specific STAR bullet)\n"
             "4. ATS readability improvements\n"
             "5. Any missing or weak sections\n\n"
             "Return ONLY valid JSON with this structure:\n"

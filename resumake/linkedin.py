@@ -57,6 +57,9 @@ def linkedin_to_cv(text: str) -> dict:
             "education (list with degree, institution, start, end), "
             "certifications (list with name, org, start, end), "
             "volunteering (list with title, org, start, end, description). "
+            "When writing experience bullets, apply the STAR method where the source text provides enough detail: "
+            "lead with context (situation/task), describe the action taken, and end with a measurable result. "
+            "Do NOT fabricate details — only apply STAR when the source text supports it.\n"
             "Use professional English. Do NOT add any explanation.\n\n"
             f"LinkedIn profile text:\n\n{text}",
             max_tokens=8192,
