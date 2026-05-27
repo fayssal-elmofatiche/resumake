@@ -238,6 +238,19 @@ def _render_sidebar_html(cv: dict, theme: Theme, lang: str) -> str:
     return "\n".join(parts)
 
 
+def _render_publication_parts(pub: dict) -> list[str]:
+    """Render a single publication entry (title, year/venue, optional cover image)."""
+    parts = [
+        f'<div class="entry-title">{_esc(pub["title"])}</div>',
+        f'<div class="entry-dates">{pub["year"]}: {_esc(pub["venue"])}</div>',
+    ]
+    if pub.get("image"):
+        img_url = _encode_photo_base64(pub["image"])
+        if img_url:
+            parts.append(f'<img class="pub-image" src="{img_url}" alt="{_esc(pub["title"])}">')
+    return parts
+
+
 def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
     """Render the main content column."""
     L = get_labels(lang)
@@ -256,6 +269,14 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
                     parts.append(f'<div class="testimonial-quote">"{_esc(t["quote"])}"</div>')
                 parts.append(f'<div class="testimonial-author">{_esc(t["name"])}</div>')
                 parts.append(f'<div class="testimonial-role">{_esc(t["role"])}, {_esc(t["org"])}</div>')
+
+    # Featured publications — highlight block at the top of the main column
+    featured = [pub for pub in cv.get("publications", []) if pub.get("featured")]
+    if featured:
+        heading = L.get("featured_publications", "Featured Publication")
+        parts.append(f'<div class="section-heading">{_esc(heading)}</div>')
+        for pub in featured:
+            parts.extend(_render_publication_parts(pub))
 
     # Experience
     if cv.get("experience"):
@@ -328,16 +349,12 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
             if cert.get("description"):
                 parts.append(f'<div class="body-text">{_esc(cert["description"])}</div>')
 
-    # Publications
-    if cv.get("publications"):
+    # Publications (featured ones are rendered separately at the top)
+    pubs = [pub for pub in cv.get("publications", []) if not pub.get("featured")]
+    if pubs:
         parts.append(f'<div class="section-heading">{_esc(L["publications"])}</div>')
-        for pub in cv["publications"]:
-            parts.append(f'<div class="entry-title">{_esc(pub["title"])}</div>')
-            parts.append(f'<div class="entry-dates">{pub["year"]}: {_esc(pub["venue"])}</div>')
-            if pub.get("image"):
-                img_url = _encode_photo_base64(pub["image"])
-                if img_url:
-                    parts.append(f'<img class="pub-image" src="{img_url}" alt="{_esc(pub["title"])}">')
+        for pub in pubs:
+            parts.extend(_render_publication_parts(pub))
 
     # Custom sections
     for section_key, items in get_custom_sections(cv).items():

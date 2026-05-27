@@ -688,34 +688,51 @@ def build_main_certifications(cell, cv, lang="en"):
             )
 
 
+def _render_publication(cell, pub, image_height_cm=3.6):
+    """Render a single publication entry (title, year/venue, optional cover image)."""
+    p = cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(2)
+    add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
+    add_run_to_para(
+        p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
+    )
+
+    image_path = resolve_asset(pub["image"]) if pub.get("image") else None
+    if pub.get("image") and not image_path:
+        from .console import err_console
+
+        err_console.print(
+            f"[yellow]Warning:[/] Publication image '{pub['image']}' not found — skipping. "
+            f"Place it in assets/ or remove the image field."
+        )
+    if image_path and image_path.exists():
+        p_img = cell.add_paragraph()
+        p_img.paragraph_format.space_before = Pt(4)
+        p_img.paragraph_format.space_after = Pt(4)
+        add_inline_picture(p_img.add_run(), image_path, height=Cm(image_height_cm))
+
+
+def build_main_featured_publications(cell, cv, lang="en"):
+    """Render featured publications as a highlight block at the top of the main column."""
+    L = get_labels(lang)
+    featured = [pub for pub in cv.get("publications", []) if pub.get("featured")]
+    if not featured:
+        return
+    add_section_heading(cell, L.get("featured_publications", "Featured Publication"), icon_key="Publications")
+    for pub in featured:
+        _render_publication(cell, pub, image_height_cm=4.5)
+
+
 def build_main_publications(cell, cv, lang="en"):
     L = get_labels(lang)
-    if not cv.get("publications"):
+    # Featured publications are rendered separately at the top — skip them here
+    pubs = [pub for pub in cv.get("publications", []) if not pub.get("featured")]
+    if not pubs:
         return
     add_section_heading(cell, L["publications"], icon_key="Publications")
-
-    for pub in cv["publications"]:
-        p = cell.add_paragraph()
-        p.paragraph_format.space_before = Pt(4)
-        p.paragraph_format.space_after = Pt(2)
-        add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
-        add_run_to_para(
-            p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
-        )
-
-        image_path = resolve_asset(pub["image"]) if pub.get("image") else None
-        if pub.get("image") and not image_path:
-            from .console import err_console
-
-            err_console.print(
-                f"[yellow]Warning:[/] Publication image '{pub['image']}' not found — skipping. "
-                f"Place it in assets/ or remove the image field."
-            )
-        if image_path and image_path.exists():
-            p_img = cell.add_paragraph()
-            p_img.paragraph_format.space_before = Pt(4)
-            p_img.paragraph_format.space_after = Pt(4)
-            add_inline_picture(p_img.add_run(), image_path, height=Cm(3.6))
+    for pub in pubs:
+        _render_publication(cell, pub)
 
 
 def build_main_custom_section(cell, title, items, lang="en"):
@@ -849,6 +866,7 @@ def _init_doc(layout):
 def _build_all_main_sections(cell, cv, lang):
     """Build all main-column sections into a cell (or document body proxy)."""
     build_main_profile(cell, cv, lang)
+    build_main_featured_publications(cell, cv, lang)
     build_main_experience(cell, cv, lang)
     build_main_education(cell, cv, lang)
     build_main_volunteering(cell, cv, lang)
@@ -978,6 +996,7 @@ def _build_academic_docx(doc, cv, lang):
 
     # Academic order: profile, publications, experience, education, rest
     build_main_profile(proxy, cv, lang)
+    build_main_featured_publications(proxy, cv, lang)
     build_main_publications(proxy, cv, lang)
     build_main_experience(proxy, cv, lang)
     build_main_education(proxy, cv, lang)
@@ -1038,6 +1057,7 @@ def _build_compact_docx(doc, cv, lang):
             font_name=_theme.fonts.body,
             space_after=Pt(4),
         )
+    build_main_featured_publications(main, cv, lang)
     build_main_experience(main, cv, lang)
     build_main_education(main, cv, lang)
     build_main_volunteering(main, cv, lang)

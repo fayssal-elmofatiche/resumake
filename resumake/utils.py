@@ -51,6 +51,7 @@ LABELS = {
         "references": "References",
         "certifications": "Certifications",
         "publications": "Publications",
+        "featured_publications": "Featured Publication",
         "testimonials_heading": "WHAT CLIENTS SAY:",
     },
     "de": {
@@ -67,6 +68,7 @@ LABELS = {
         "references": "Referenzen",
         "certifications": "Zertifizierungen",
         "publications": "Publikationen",
+        "featured_publications": "Ausgewählte Publikation",
         "testimonials_heading": "WAS KUNDEN SAGEN:",
     },
 }
