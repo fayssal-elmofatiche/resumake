@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Publication cover images** — publications accept an optional `image` field (a filename resolved from `assets/`). The image is embedded below the entry in both Word and HTML/PDF output. Useful for book covers.
+
 ## [0.9.0] - 2026-02-16
 
 ### Added

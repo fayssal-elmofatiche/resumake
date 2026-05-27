@@ -25,6 +25,25 @@ def set_cell_shading(cell, color_hex):
     cell._tc.get_or_add_tcPr().append(shading)
 
 
+def add_inline_picture(run, image_path, **kwargs):
+    """Add a picture to a run and patch OOXML attributes required by Word for Mac.
+
+    python-docx 1.2.0 omits distT/distB/distL/distR and effectExtent, which makes
+    images fail to render in Word for Mac. Returns the inline shape.
+    """
+    inline_shape = run.add_picture(str(image_path), **kwargs)
+    inline_el = inline_shape._inline
+    inline_el.attrib["distT"] = "0"
+    inline_el.attrib["distB"] = "0"
+    inline_el.attrib["distL"] = "0"
+    inline_el.attrib["distR"] = "0"
+    extent = inline_el.find(qn("wp:extent"))
+    if extent is not None and inline_el.find(qn("wp:effectExtent")) is None:
+        effect_extent = parse_xml(f'<wp:effectExtent {nsdecls("wp")} l="0" t="0" r="0" b="0"/>')
+        extent.addnext(effect_extent)
+    return inline_shape
+
+
 def remove_table_borders(table):
     tbl = table._tbl
     tblPr = tbl.tblPr
@@ -182,18 +201,7 @@ def build_sidebar_header(cell, cv, lang="en"):
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_photo.paragraph_format.space_after = Pt(8)
         run = p_photo.add_run()
-        inline_shape = run.add_picture(str(photo_path), width=Cm(2.8))
-
-        # Fix python-docx 1.2.0 missing OOXML attributes (required by Word for Mac)
-        inline_el = inline_shape._inline
-        inline_el.attrib["distT"] = "0"
-        inline_el.attrib["distB"] = "0"
-        inline_el.attrib["distL"] = "0"
-        inline_el.attrib["distR"] = "0"
-        extent = inline_el.find(qn("wp:extent"))
-        if extent is not None and inline_el.find(qn("wp:effectExtent")) is None:
-            effect_extent = parse_xml(f'<wp:effectExtent {nsdecls("wp")} l="0" t="0" r="0" b="0"/>')
-            extent.addnext(effect_extent)
+        add_inline_picture(run, photo_path, width=Cm(2.8))
 
     name = cv["name"]
     parts = name.split(" ", 1)
@@ -694,6 +702,20 @@ def build_main_publications(cell, cv, lang="en"):
         add_run_to_para(
             p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
         )
+
+        image_path = resolve_asset(pub["image"]) if pub.get("image") else None
+        if pub.get("image") and not image_path:
+            from .console import err_console
+
+            err_console.print(
+                f"[yellow]Warning:[/] Publication image '{pub['image']}' not found — skipping. "
+                f"Place it in assets/ or remove the image field."
+            )
+        if image_path and image_path.exists():
+            p_img = cell.add_paragraph()
+            p_img.paragraph_format.space_before = Pt(4)
+            p_img.paragraph_format.space_after = Pt(4)
+            add_inline_picture(p_img.add_run(), image_path, height=Cm(3.6))
 
 
 def build_main_custom_section(cell, title, items, lang="en"):

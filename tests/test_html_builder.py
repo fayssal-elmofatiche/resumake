@@ -58,3 +58,22 @@ def test_build_html_links(sample_cv):
     html = build_html(sample_cv, "en", theme=Theme())
     assert 'href="https://github.com/janedoe"' in html
     assert "GitHub" in html
+
+
+def test_build_html_publication_image_embedded(sample_cv):
+    # icon_publications.png ships as a built-in package asset, so resolve_asset finds it
+    sample_cv["publications"] = [
+        {"title": "A Book", "year": 2026, "venue": "Packt", "image": "icon_publications.png"},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    assert 'class="pub-image"' in html
+    assert "data:image/png;base64," in html
+
+
+def test_build_html_publication_missing_image_skipped(sample_cv):
+    sample_cv["publications"] = [
+        {"title": "A Paper", "year": 2010, "venue": "Journal", "image": "does_not_exist.png"},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    assert "A Paper" in html
+    assert 'class="pub-image"' not in html

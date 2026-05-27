@@ -122,6 +122,12 @@ def _build_css(theme: Theme) -> str:
         color: #{c.text_muted};
         margin-bottom: 0.1cm;
     }}
+    .pub-image {{
+        height: 3.6cm;
+        width: auto;
+        margin: 0.15cm 0 0.25cm;
+        display: block;
+    }}
     .entry-desc {{
         font-size: {s.body_pt}pt;
         color: #{c.text_muted};
@@ -328,6 +334,10 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         for pub in cv["publications"]:
             parts.append(f'<div class="entry-title">{_esc(pub["title"])}</div>')
             parts.append(f'<div class="entry-dates">{pub["year"]}: {_esc(pub["venue"])}</div>')
+            if pub.get("image"):
+                img_url = _encode_photo_base64(pub["image"])
+                if img_url:
+                    parts.append(f'<img class="pub-image" src="{img_url}" alt="{_esc(pub["title"])}">')
 
     # Custom sections
     for section_key, items in get_custom_sections(cv).items():
