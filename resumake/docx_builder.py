@@ -354,7 +354,16 @@ def build_sidebar_skills(cell, cv, lang="en"):
             )
 
     if skills.get("technical"):
-        add_para(cell, "", space_before=Pt(4))
+        add_para(
+            cell,
+            L["technical_skills"],
+            bold=True,
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+            space_before=Pt(8),
+            space_after=Pt(4),
+        )
         for skill in skills["technical"]:
             add_para(
                 cell,
@@ -505,7 +514,7 @@ def build_main_experience(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -574,7 +583,7 @@ def build_main_education(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -621,7 +630,7 @@ def build_main_volunteering(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -671,7 +680,7 @@ def build_main_certifications(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -877,32 +886,48 @@ def _build_all_main_sections(cell, cv, lang):
         build_main_custom_section(cell, section_key, items, lang)
 
 
+def _make_sidebar_float(table, layout):
+    """Pin a table as a page-anchored float at the top-left text area.
+
+    Body text wraps to the right of the float on the first page; on subsequent
+    pages there is no float, so the main content flows across the full width.
+    """
+    table.autofit = False
+    tblPr = table._tbl.tblPr
+    tblpPr = parse_xml(
+        f"<w:tblpPr {nsdecls('w')} "
+        'w:leftFromText="0" w:rightFromText="170" w:topFromText="0" w:bottomFromText="142" '
+        'w:vertAnchor="page" w:horzAnchor="page" '
+        f'w:tblpX="{int(layout.page_left_margin_cm * 567)}" '
+        f'w:tblpY="{int(layout.page_top_margin_cm * 567)}"/>'
+    )
+    tblOverlap = parse_xml(f"<w:tblOverlap {nsdecls('w')} w:val=\"never\"/>")
+    # CT_TblPr child order: tblpPr must precede tblOverlap, both near the front.
+    tblPr.insert(0, tblOverlap)
+    tblPr.insert(0, tblpPr)
+
+
 def _build_two_column_docx(doc, cv, lang):
-    """Standard two-column layout with sidebar."""
+    """Two-column layout: a floating sidebar pinned to the first page, with the
+    main content flowing full-width — wrapping beside the sidebar on page 1 and
+    using the entire page width on every following page."""
     layout = _theme.layout
 
-    table = doc.add_table(rows=1, cols=2)
+    table = doc.add_table(rows=1, cols=1)
     remove_table_borders(table)
+    _make_sidebar_float(table, layout)
 
-    tbl = table._tbl
-    tblGrid = tbl.find(qn("w:tblGrid"))
+    tblGrid = table._tbl.find(qn("w:tblGrid"))
     if tblGrid is not None:
         gridCols = tblGrid.findall(qn("w:gridCol"))
-        if len(gridCols) >= 2:
+        if gridCols:
             gridCols[0].set(qn("w:w"), str(int(layout.sidebar_width_cm * 567)))
-            gridCols[1].set(qn("w:w"), str(int(layout.main_width_cm * 567)))
 
     sidebar = table.cell(0, 0)
-    main = table.cell(0, 1)
-
     set_cell_shading(sidebar, _theme.colors.primary)
     remove_cell_borders(sidebar)
     set_cell_width(sidebar, layout.sidebar_width_cm)
     set_cell_margins(sidebar, top=0.4, bottom=0.5, left=0.3, right=0.3)
-
-    remove_cell_borders(main)
-    set_cell_width(main, layout.main_width_cm)
-    set_cell_margins(main, top=0.3, bottom=0.5, left=0.5, right=0.3)
 
     build_sidebar_header(sidebar, cv, lang)
     build_sidebar_contact(sidebar, cv, lang)
@@ -910,8 +935,14 @@ def _build_two_column_docx(doc, cv, lang):
     build_sidebar_skills(sidebar, cv, lang)
     build_sidebar_languages(sidebar, cv, lang)
 
-    main.paragraphs[0].text = ""
-    _build_all_main_sections(main, cv, lang)
+    # Drop the empty leading paragraph so the main content starts at the top.
+    if doc.paragraphs:
+        leading = doc.paragraphs[0]
+        leading._element.getparent().remove(leading._element)
+
+    # Main content flows in the body and wraps around the floating sidebar.
+    proxy = _DocProxy(doc)
+    _build_all_main_sections(proxy, cv, lang)
 
 
 class _DocProxy:

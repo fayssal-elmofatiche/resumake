@@ -224,6 +224,7 @@ def _render_sidebar_html(cv: dict, theme: Theme, lang: str) -> str:
             for s in skills["leadership"]:
                 parts.append(f'<div class="sidebar-text">{_esc(s)}</div>')
         if skills.get("technical"):
+            parts.append(f'<div class="sidebar-label">{_esc(L["technical_skills"])}</div>')
             for s in skills["technical"]:
                 parts.append(f'<div class="sidebar-text">{_esc(s)}</div>')
 
@@ -286,7 +287,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
             if exp.get("org"):
                 title_text += f" — {exp['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(exp["start"])} — {_esc(exp["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc((exp["start"] + " — " + exp.get("end", "")).strip(" —"))}</div>')
             if exp.get("description"):
                 parts.append(f'<div class="entry-desc">{_esc(exp["description"])}</div>')
             if exp.get("bullets"):
@@ -317,7 +318,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         parts.append(f'<div class="section-heading">{_esc(L["education"])}</div>')
         for edu in cv["education"]:
             parts.append(f'<div class="entry-title">{_esc(edu["degree"])}, {_esc(edu["institution"])}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(edu["start"])} — {_esc(edu["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc((edu["start"] + " — " + edu.get("end", "")).strip(" —"))}</div>')
             if edu.get("description"):
                 parts.append(f'<div class="body-text">{_esc(edu["description"])}</div>')
             if edu.get("details"):
@@ -328,7 +329,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         parts.append(f'<div class="section-heading">{_esc(L["volunteering"])}</div>')
         for vol in cv["volunteering"]:
             parts.append(f'<div class="entry-title">{_esc(vol["title"])} — {_esc(vol["org"])}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(vol["start"])} — {_esc(vol["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc((vol["start"] + " — " + vol.get("end", "")).strip(" —"))}</div>')
             if vol.get("description"):
                 parts.append(f'<div class="body-text">{_esc(vol["description"])}</div>')
 
@@ -345,7 +346,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
             if cert.get("org"):
                 title_text += f", {cert['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(cert["start"])} — {_esc(cert["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc((cert["start"] + " — " + cert.get("end", "")).strip(" —"))}</div>')
             if cert.get("description"):
                 parts.append(f'<div class="body-text">{_esc(cert["description"])}</div>')
 
