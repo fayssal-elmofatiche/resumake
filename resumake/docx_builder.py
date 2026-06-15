@@ -25,6 +25,25 @@ def set_cell_shading(cell, color_hex):
     cell._tc.get_or_add_tcPr().append(shading)
 
 
+def add_inline_picture(run, image_path, **kwargs):
+    """Add a picture to a run and patch OOXML attributes required by Word for Mac.
+
+    python-docx 1.2.0 omits distT/distB/distL/distR and effectExtent, which makes
+    images fail to render in Word for Mac. Returns the inline shape.
+    """
+    inline_shape = run.add_picture(str(image_path), **kwargs)
+    inline_el = inline_shape._inline
+    inline_el.attrib["distT"] = "0"
+    inline_el.attrib["distB"] = "0"
+    inline_el.attrib["distL"] = "0"
+    inline_el.attrib["distR"] = "0"
+    extent = inline_el.find(qn("wp:extent"))
+    if extent is not None and inline_el.find(qn("wp:effectExtent")) is None:
+        effect_extent = parse_xml(f'<wp:effectExtent {nsdecls("wp")} l="0" t="0" r="0" b="0"/>')
+        extent.addnext(effect_extent)
+    return inline_shape
+
+
 def remove_table_borders(table):
     tbl = table._tbl
     tblPr = tbl.tblPr
@@ -182,18 +201,7 @@ def build_sidebar_header(cell, cv, lang="en"):
         p_photo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_photo.paragraph_format.space_after = Pt(8)
         run = p_photo.add_run()
-        inline_shape = run.add_picture(str(photo_path), width=Cm(2.8))
-
-        # Fix python-docx 1.2.0 missing OOXML attributes (required by Word for Mac)
-        inline_el = inline_shape._inline
-        inline_el.attrib["distT"] = "0"
-        inline_el.attrib["distB"] = "0"
-        inline_el.attrib["distL"] = "0"
-        inline_el.attrib["distR"] = "0"
-        extent = inline_el.find(qn("wp:extent"))
-        if extent is not None and inline_el.find(qn("wp:effectExtent")) is None:
-            effect_extent = parse_xml(f'<wp:effectExtent {nsdecls("wp")} l="0" t="0" r="0" b="0"/>')
-            extent.addnext(effect_extent)
+        add_inline_picture(run, photo_path, width=Cm(2.8))
 
     name = cv["name"]
     parts = name.split(" ", 1)
@@ -346,7 +354,16 @@ def build_sidebar_skills(cell, cv, lang="en"):
             )
 
     if skills.get("technical"):
-        add_para(cell, "", space_before=Pt(4))
+        add_para(
+            cell,
+            L["technical_skills"],
+            bold=True,
+            size=Pt(_theme.sizes.small_pt),
+            color=_theme.colors.text_muted_rgb,
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+            space_before=Pt(8),
+            space_after=Pt(4),
+        )
         for skill in skills["technical"]:
             add_para(
                 cell,
@@ -497,7 +514,7 @@ def build_main_experience(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -566,7 +583,7 @@ def build_main_education(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -613,7 +630,7 @@ def build_main_volunteering(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -663,7 +680,7 @@ def build_main_certifications(cell, cv, lang="en"):
 
         add_para(
             cell,
-            f"{entry['start']} — {entry['end']}",
+            f"{entry.get('start', '')} — {entry.get('end', '')}".strip(" —"),
             size=Pt(_theme.sizes.small_pt),
             color=_theme.colors.text_muted_rgb,
             space_after=Pt(2),
@@ -680,20 +697,51 @@ def build_main_certifications(cell, cv, lang="en"):
             )
 
 
+def _render_publication(cell, pub, image_height_cm=3.6):
+    """Render a single publication entry (title, year/venue, optional cover image)."""
+    p = cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(2)
+    add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
+    add_run_to_para(
+        p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
+    )
+
+    image_path = resolve_asset(pub["image"]) if pub.get("image") else None
+    if pub.get("image") and not image_path:
+        from .console import err_console
+
+        err_console.print(
+            f"[yellow]Warning:[/] Publication image '{pub['image']}' not found — skipping. "
+            f"Place it in assets/ or remove the image field."
+        )
+    if image_path and image_path.exists():
+        p_img = cell.add_paragraph()
+        p_img.paragraph_format.space_before = Pt(4)
+        p_img.paragraph_format.space_after = Pt(4)
+        add_inline_picture(p_img.add_run(), image_path, height=Cm(image_height_cm))
+
+
+def build_main_featured_publications(cell, cv, lang="en"):
+    """Render featured publications as a highlight block at the top of the main column."""
+    L = get_labels(lang)
+    featured = [pub for pub in cv.get("publications", []) if pub.get("featured")]
+    if not featured:
+        return
+    add_section_heading(cell, L.get("featured_publications", "Featured Publication"), icon_key="Publications")
+    for pub in featured:
+        _render_publication(cell, pub, image_height_cm=4.5)
+
+
 def build_main_publications(cell, cv, lang="en"):
     L = get_labels(lang)
-    if not cv.get("publications"):
+    # Featured publications are rendered separately at the top — skip them here
+    pubs = [pub for pub in cv.get("publications", []) if not pub.get("featured")]
+    if not pubs:
         return
     add_section_heading(cell, L["publications"], icon_key="Publications")
-
-    for pub in cv["publications"]:
-        p = cell.add_paragraph()
-        p.paragraph_format.space_before = Pt(4)
-        p.paragraph_format.space_after = Pt(2)
-        add_run_to_para(p, pub["title"], bold=True, size=Pt(_theme.sizes.body_pt), color=_theme.colors.primary_rgb)
-        add_run_to_para(
-            p, f"\n{pub['year']}: {pub['venue']}", size=Pt(_theme.sizes.small_pt), color=_theme.colors.text_muted_rgb
-        )
+    for pub in pubs:
+        _render_publication(cell, pub)
 
 
 def build_main_custom_section(cell, title, items, lang="en"):
@@ -827,6 +875,7 @@ def _init_doc(layout):
 def _build_all_main_sections(cell, cv, lang):
     """Build all main-column sections into a cell (or document body proxy)."""
     build_main_profile(cell, cv, lang)
+    build_main_featured_publications(cell, cv, lang)
     build_main_experience(cell, cv, lang)
     build_main_education(cell, cv, lang)
     build_main_volunteering(cell, cv, lang)
@@ -837,32 +886,48 @@ def _build_all_main_sections(cell, cv, lang):
         build_main_custom_section(cell, section_key, items, lang)
 
 
+def _make_sidebar_float(table, layout):
+    """Pin a table as a page-anchored float at the top-left text area.
+
+    Body text wraps to the right of the float on the first page; on subsequent
+    pages there is no float, so the main content flows across the full width.
+    """
+    table.autofit = False
+    tblPr = table._tbl.tblPr
+    tblpPr = parse_xml(
+        f"<w:tblpPr {nsdecls('w')} "
+        'w:leftFromText="0" w:rightFromText="170" w:topFromText="0" w:bottomFromText="142" '
+        'w:vertAnchor="page" w:horzAnchor="page" '
+        f'w:tblpX="{int(layout.page_left_margin_cm * 567)}" '
+        f'w:tblpY="{int(layout.page_top_margin_cm * 567)}"/>'
+    )
+    tblOverlap = parse_xml(f'<w:tblOverlap {nsdecls("w")} w:val="never"/>')
+    # CT_TblPr child order: tblpPr must precede tblOverlap, both near the front.
+    tblPr.insert(0, tblOverlap)
+    tblPr.insert(0, tblpPr)
+
+
 def _build_two_column_docx(doc, cv, lang):
-    """Standard two-column layout with sidebar."""
+    """Two-column layout: a floating sidebar pinned to the first page, with the
+    main content flowing full-width — wrapping beside the sidebar on page 1 and
+    using the entire page width on every following page."""
     layout = _theme.layout
 
-    table = doc.add_table(rows=1, cols=2)
+    table = doc.add_table(rows=1, cols=1)
     remove_table_borders(table)
+    _make_sidebar_float(table, layout)
 
-    tbl = table._tbl
-    tblGrid = tbl.find(qn("w:tblGrid"))
+    tblGrid = table._tbl.find(qn("w:tblGrid"))
     if tblGrid is not None:
         gridCols = tblGrid.findall(qn("w:gridCol"))
-        if len(gridCols) >= 2:
+        if gridCols:
             gridCols[0].set(qn("w:w"), str(int(layout.sidebar_width_cm * 567)))
-            gridCols[1].set(qn("w:w"), str(int(layout.main_width_cm * 567)))
 
     sidebar = table.cell(0, 0)
-    main = table.cell(0, 1)
-
     set_cell_shading(sidebar, _theme.colors.primary)
     remove_cell_borders(sidebar)
     set_cell_width(sidebar, layout.sidebar_width_cm)
     set_cell_margins(sidebar, top=0.4, bottom=0.5, left=0.3, right=0.3)
-
-    remove_cell_borders(main)
-    set_cell_width(main, layout.main_width_cm)
-    set_cell_margins(main, top=0.3, bottom=0.5, left=0.5, right=0.3)
 
     build_sidebar_header(sidebar, cv, lang)
     build_sidebar_contact(sidebar, cv, lang)
@@ -870,8 +935,14 @@ def _build_two_column_docx(doc, cv, lang):
     build_sidebar_skills(sidebar, cv, lang)
     build_sidebar_languages(sidebar, cv, lang)
 
-    main.paragraphs[0].text = ""
-    _build_all_main_sections(main, cv, lang)
+    # Drop the empty leading paragraph so the main content starts at the top.
+    if doc.paragraphs:
+        leading = doc.paragraphs[0]
+        leading._element.getparent().remove(leading._element)
+
+    # Main content flows in the body and wraps around the floating sidebar.
+    proxy = _DocProxy(doc)
+    _build_all_main_sections(proxy, cv, lang)
 
 
 class _DocProxy:
@@ -956,6 +1027,7 @@ def _build_academic_docx(doc, cv, lang):
 
     # Academic order: profile, publications, experience, education, rest
     build_main_profile(proxy, cv, lang)
+    build_main_featured_publications(proxy, cv, lang)
     build_main_publications(proxy, cv, lang)
     build_main_experience(proxy, cv, lang)
     build_main_education(proxy, cv, lang)
@@ -1016,6 +1088,7 @@ def _build_compact_docx(doc, cv, lang):
             font_name=_theme.fonts.body,
             space_after=Pt(4),
         )
+    build_main_featured_publications(main, cv, lang)
     build_main_experience(main, cv, lang)
     build_main_education(main, cv, lang)
     build_main_volunteering(main, cv, lang)

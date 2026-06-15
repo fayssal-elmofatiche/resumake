@@ -55,6 +55,27 @@ def test_optional_sections(sample_cv):
     assert result.publications is None
 
 
+def test_publication_image_optional(sample_cv):
+    # Publications validate with and without an image field
+    sample_cv["publications"] = [
+        {"title": "A Book", "year": 2026, "venue": "Packt", "image": "cover.jpg"},
+        {"title": "A Paper", "year": 2010, "venue": "Journal"},
+    ]
+    result = validate_cv(sample_cv)
+    assert result.publications[0].image == "cover.jpg"
+    assert result.publications[1].image is None
+
+
+def test_publication_featured_optional(sample_cv):
+    sample_cv["publications"] = [
+        {"title": "A Book", "year": 2026, "venue": "Packt", "featured": True},
+        {"title": "A Paper", "year": 2010, "venue": "Journal"},
+    ]
+    result = validate_cv(sample_cv)
+    assert result.publications[0].featured is True
+    assert result.publications[1].featured is None
+
+
 def test_custom_sections_accepted(sample_cv):
     sample_cv["awards"] = [{"title": "Best Paper", "org": "Conf", "start": "2023", "end": "2023"}]
     result = validate_cv(sample_cv)

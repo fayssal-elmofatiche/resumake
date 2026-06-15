@@ -25,6 +25,11 @@ def _esc(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
+def _date_range(item: dict) -> str:
+    """Format 'start — end', dropping the dash when one side is empty."""
+    return (item.get("start", "") + " — " + item.get("end", "")).strip(" —")
+
+
 def _build_css(theme: Theme) -> str:
     """Generate CSS from theme settings."""
     c = theme.colors
@@ -47,19 +52,26 @@ def _build_css(theme: Theme) -> str:
         print-color-adjust: exact;
     }}
     .cv-container {{
-        display: flex;
-        min-height: 100vh;
+        display: block;
     }}
+    /* The sidebar is a fixed box so WeasyPrint repeats it on every page and the
+       main column flows in normal block layout that paginates correctly. A flex
+       (or any single-block) two-column layout cannot be fragmented across pages,
+       which silently drops everything after page 1 in the PDF. */
     .sidebar {{
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
         width: {lay.sidebar_width_cm}cm;
-        min-width: {lay.sidebar_width_cm}cm;
         background-color: #{c.primary};
         color: #{c.text_light};
         padding: 0.8cm 0.5cm;
         text-align: center;
+        overflow: hidden;
     }}
     .main {{
-        flex: 1;
+        margin-left: {lay.sidebar_width_cm}cm;
         padding: 0.6cm 0.6cm 1cm 0.8cm;
     }}
     .photo {{ width: 2.8cm; height: 2.8cm; border-radius: 50%; object-fit: cover; margin-bottom: 0.4cm; }}
@@ -122,6 +134,12 @@ def _build_css(theme: Theme) -> str:
         color: #{c.text_muted};
         margin-bottom: 0.1cm;
     }}
+    .pub-image {{
+        height: 3.6cm;
+        width: auto;
+        margin: 0.15cm 0 0.25cm;
+        display: block;
+    }}
     .entry-desc {{
         font-size: {s.body_pt}pt;
         color: #{c.text_muted};
@@ -169,7 +187,6 @@ def _build_css(theme: Theme) -> str:
         color: #{c.text_muted};
     }}
     @media print {{
-        .cv-container {{ min-height: auto; }}
         .entry-title {{ page-break-inside: avoid; }}
     }}
     """
@@ -218,6 +235,7 @@ def _render_sidebar_html(cv: dict, theme: Theme, lang: str) -> str:
             for s in skills["leadership"]:
                 parts.append(f'<div class="sidebar-text">{_esc(s)}</div>')
         if skills.get("technical"):
+            parts.append(f'<div class="sidebar-label">{_esc(L["technical_skills"])}</div>')
             for s in skills["technical"]:
                 parts.append(f'<div class="sidebar-text">{_esc(s)}</div>')
 
@@ -230,6 +248,19 @@ def _render_sidebar_html(cv: dict, theme: Theme, lang: str) -> str:
             parts.append(f'<div class="sidebar-text">{_esc(lg["name"])} ({_esc(level)})</div>')
 
     return "\n".join(parts)
+
+
+def _render_publication_parts(pub: dict) -> list[str]:
+    """Render a single publication entry (title, year/venue, optional cover image)."""
+    parts = [
+        f'<div class="entry-title">{_esc(pub["title"])}</div>',
+        f'<div class="entry-dates">{pub["year"]}: {_esc(pub["venue"])}</div>',
+    ]
+    if pub.get("image"):
+        img_url = _encode_photo_base64(pub["image"])
+        if img_url:
+            parts.append(f'<img class="pub-image" src="{img_url}" alt="{_esc(pub["title"])}">')
+    return parts
 
 
 def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
@@ -251,6 +282,14 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
                 parts.append(f'<div class="testimonial-author">{_esc(t["name"])}</div>')
                 parts.append(f'<div class="testimonial-role">{_esc(t["role"])}, {_esc(t["org"])}</div>')
 
+    # Featured publications — highlight block at the top of the main column
+    featured = [pub for pub in cv.get("publications", []) if pub.get("featured")]
+    if featured:
+        heading = L.get("featured_publications", "Featured Publication")
+        parts.append(f'<div class="section-heading">{_esc(heading)}</div>')
+        for pub in featured:
+            parts.extend(_render_publication_parts(pub))
+
     # Experience
     if cv.get("experience"):
         parts.append(f'<div class="section-heading">{_esc(L["experience"])}</div>')
@@ -259,7 +298,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
             if exp.get("org"):
                 title_text += f" — {exp['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(exp["start"])} — {_esc(exp["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc(_date_range(exp))}</div>')
             if exp.get("description"):
                 parts.append(f'<div class="entry-desc">{_esc(exp["description"])}</div>')
             if exp.get("bullets"):
@@ -290,7 +329,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         parts.append(f'<div class="section-heading">{_esc(L["education"])}</div>')
         for edu in cv["education"]:
             parts.append(f'<div class="entry-title">{_esc(edu["degree"])}, {_esc(edu["institution"])}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(edu["start"])} — {_esc(edu["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc(_date_range(edu))}</div>')
             if edu.get("description"):
                 parts.append(f'<div class="body-text">{_esc(edu["description"])}</div>')
             if edu.get("details"):
@@ -301,7 +340,7 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
         parts.append(f'<div class="section-heading">{_esc(L["volunteering"])}</div>')
         for vol in cv["volunteering"]:
             parts.append(f'<div class="entry-title">{_esc(vol["title"])} — {_esc(vol["org"])}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(vol["start"])} — {_esc(vol["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc(_date_range(vol))}</div>')
             if vol.get("description"):
                 parts.append(f'<div class="body-text">{_esc(vol["description"])}</div>')
 
@@ -318,16 +357,16 @@ def _render_main_html(cv: dict, theme: Theme, lang: str) -> str:
             if cert.get("org"):
                 title_text += f", {cert['org']}"
             parts.append(f'<div class="entry-title">{_esc(title_text)}</div>')
-            parts.append(f'<div class="entry-dates">{_esc(cert["start"])} — {_esc(cert["end"])}</div>')
+            parts.append(f'<div class="entry-dates">{_esc(_date_range(cert))}</div>')
             if cert.get("description"):
                 parts.append(f'<div class="body-text">{_esc(cert["description"])}</div>')
 
-    # Publications
-    if cv.get("publications"):
+    # Publications (featured ones are rendered separately at the top)
+    pubs = [pub for pub in cv.get("publications", []) if not pub.get("featured")]
+    if pubs:
         parts.append(f'<div class="section-heading">{_esc(L["publications"])}</div>')
-        for pub in cv["publications"]:
-            parts.append(f'<div class="entry-title">{_esc(pub["title"])}</div>')
-            parts.append(f'<div class="entry-dates">{pub["year"]}: {_esc(pub["venue"])}</div>')
+        for pub in pubs:
+            parts.extend(_render_publication_parts(pub))
 
     # Custom sections
     for section_key, items in get_custom_sections(cv).items():

@@ -58,3 +58,45 @@ def test_build_html_links(sample_cv):
     html = build_html(sample_cv, "en", theme=Theme())
     assert 'href="https://github.com/janedoe"' in html
     assert "GitHub" in html
+
+
+def test_build_html_publication_image_embedded(sample_cv):
+    # icon_publications.png ships as a built-in package asset, so resolve_asset finds it
+    sample_cv["publications"] = [
+        {"title": "A Book", "year": 2026, "venue": "Packt", "image": "icon_publications.png"},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    assert 'class="pub-image"' in html
+    assert "data:image/png;base64," in html
+
+
+def test_build_html_publication_missing_image_skipped(sample_cv):
+    sample_cv["publications"] = [
+        {"title": "A Paper", "year": 2010, "venue": "Journal", "image": "does_not_exist.png"},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    assert "A Paper" in html
+    assert 'class="pub-image"' not in html
+
+
+def test_build_html_featured_publication_heading(sample_cv):
+    sample_cv["publications"] = [
+        {"title": "Featured Book", "year": 2026, "venue": "Packt", "featured": True},
+        {"title": "Old Paper", "year": 2010, "venue": "Journal"},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    assert "Featured Publication" in html
+    assert "Featured Book" in html
+    # Non-featured publication still appears under the regular Publications heading
+    assert "Old Paper" in html
+    # Featured book appears before the regular Publications section
+    assert html.index("Featured Book") < html.index("Old Paper")
+
+
+def test_build_html_featured_publication_not_duplicated(sample_cv):
+    sample_cv["publications"] = [
+        {"title": "Featured Book", "year": 2026, "venue": "Packt", "featured": True},
+    ]
+    html = build_html(sample_cv, "en", theme=Theme())
+    # Rendered once in the featured block, not again in a regular Publications section
+    assert html.count("Featured Book") == 1

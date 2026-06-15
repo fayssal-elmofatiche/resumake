@@ -75,6 +75,8 @@ class Publication(BaseModel):
     title: str
     year: int
     venue: str
+    image: Optional[str] = None
+    featured: Optional[bool] = None
 
 
 KNOWN_KEYS = {

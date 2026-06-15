@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Publication cover images** — publications accept an optional `image` field (a filename resolved from `assets/`). The image is embedded below the entry in both Word and HTML/PDF output. Useful for book covers.
+- **Featured publications** — mark a publication with `featured: true` to render it in a "Featured Publication" highlight block at the top of the main column (right after the profile), with a larger cover. Featured entries are de-duplicated from the regular Publications list at the bottom.
+
 ## [0.9.0] - 2026-02-16
 
 ### Added

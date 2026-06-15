@@ -43,6 +43,7 @@ LABELS = {
         "links": "Links",
         "skills": "Skills",
         "leadership_skills": "Leadership Skills",
+        "technical_skills": "Technical Skills",
         "languages": "Languages",
         "profile": "Profile",
         "experience": "Project / Employment History",
@@ -51,6 +52,7 @@ LABELS = {
         "references": "References",
         "certifications": "Certifications",
         "publications": "Publications",
+        "featured_publications": "Featured Publication",
         "testimonials_heading": "WHAT CLIENTS SAY:",
     },
     "de": {
@@ -59,6 +61,7 @@ LABELS = {
         "links": "Links",
         "skills": "Kompetenzen",
         "leadership_skills": "Führungskompetenzen",
+        "technical_skills": "Technische Kompetenzen",
         "languages": "Sprachen",
         "profile": "Profil",
         "experience": "Projekt- / Berufserfahrung",
@@ -67,6 +70,7 @@ LABELS = {
         "references": "Referenzen",
         "certifications": "Zertifizierungen",
         "publications": "Publikationen",
+        "featured_publications": "Ausgewählte Publikation",
         "testimonials_heading": "WAS KUNDEN SAGEN:",
     },
 }
