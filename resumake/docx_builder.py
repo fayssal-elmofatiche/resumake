@@ -901,7 +901,7 @@ def _make_sidebar_float(table, layout):
         f'w:tblpX="{int(layout.page_left_margin_cm * 567)}" '
         f'w:tblpY="{int(layout.page_top_margin_cm * 567)}"/>'
     )
-    tblOverlap = parse_xml(f"<w:tblOverlap {nsdecls('w')} w:val=\"never\"/>")
+    tblOverlap = parse_xml(f'<w:tblOverlap {nsdecls("w")} w:val="never"/>')
     # CT_TblPr child order: tblpPr must precede tblOverlap, both near the front.
     tblPr.insert(0, tblOverlap)
     tblPr.insert(0, tblpPr)
